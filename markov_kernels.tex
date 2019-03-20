@@ -1,0 +1,330 @@
+
+\section{Markov Kernels and String Diagrams}
+
+
+
+\begin{definition}[Markov kernel]
+Given two measureable sets $(E,\mathcal{E})$ and $(F,\mathcal{F})$, a Markov kernel $K$ is a map $E\times \mathcal{F} \to [0,1]$ where
+\begin{itemize}
+    \item The map $x\mapsto K(B;x)$ is $\mathcal{E}$-measurable for every $B\in\mathcal{F}$
+    \item The map $B\mapsto K(B;x)$ is a probability measure on $(F,\mathcal{F})$ for every $x\in E$ 
+\end{itemize}
+
+Writing the set of probability measures $(F,\mathcal{F})\to [0,1]$ as $\Delta(\mathcal{F})$, we can also write $K:E\to \Delta(\mathcal{F})$, to be read as ``$K$ maps from $E$ to probability measures on $(F,\mathcal{F})$''.
+
+\end{definition}
+
+\begin{definition}[Measure-kernel-function product]\label{def:kernel_products}
+If $K$ is a Markov kernel from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $\mu$ is a probability measure on $(E,\mathcal{E})$, then
+\begin{align}
+    \mu K(B)=\int_E \mu(dx) K(B;x),\qquad B\in\mathcal{F}
+\end{align}
+defines a probability measure $\mu K$ on $(F,\mathcal{F})$.
+
+If $f$ is a nonnegative measurable function $F\to \mathbb{R}$ then
+\begin{align}
+    Kf(x) = \int_F K(dy;x)f(y), \qquad x\in E
+\end{align}
+is a nonnegative measureable function $E\to \mathbb{R}$.
+
+If $L$ is a Markov kernel from $(F,\mathcal{F})$ to $(G,\mathcal{G})$, then
+\begin{align}
+    KL(B;x) = \int_F K(dy;x) L(B;y),\qquad x\in E, B\in \mathcal{G}
+\end{align}
+is a Markov kernel from $(E,\mathcal{E})$ to $(G,\mathcal{G})$. \cite{cinlar_probability_2011}
+\end{definition}
+
+\begin{definition}[Kernel Tensor product]
+Given two kernels $K$ from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $L$ from $(G,\mathcal{G})$ to $(H,\mathcal{H})$, the kernel $K\otimes L: (E\times G,\mathcal{F}\otimes \mathcal{H})\to [0,1]$ is defined:
+\begin{align}
+    K\otimes L([A,B];[x,y]) = K(A;x)L(B;y)
+\end{align}
+\end{definition}
+
+\begin{lemma}[Countably generated $\pi$-systems]\label{lem:cgpisys}
+Given a measurable space $(F,\mathcal{F})$ with countable $\mathcal{G}$ such that $\mathcal{F}=\sigma(\mathcal{G})$, then there is a countable $\pi$-system $\mathcal{H}$ such that $\mathcal{F}=\sigma(\mathcal{H})$.
+\end{lemma}
+
+\begin{proof}
+Define $\mathcal{G}_0 = \mathcal{G}$ and $\mathcal{G}_{n+1} = \{A\cap B|A,B\in \mathcal{G}_n\}$. $\mathcal{G}_0$ is countable and $\mathcal{G}_n$ countable implies $\mathcal{G}_{n+1}$ is countable, so $\mathcal{G}_n$ is countable for all $n$.
+
+Consider $\mathcal{G}_\infty = \bigcup_{n\in\mathbb{N}} \mathcal{G}_n$. $\mathcal{G}_\infty$ is closed under intersection; for any $A,B\in\mathcal{G}_\infty$, there is some $N\in \mathbb{N}$ such that $A,B\in \mathcal{G}_N$. Then $A\cap B\in\mathcal{G}_{N+1}$ so $A\cap B\in \mathcal{G}_\infty$. $\mathcal{G}_\infty$ is a countable union of countable sets, so it is a countable $\pi$-system.
+\end{proof}
+
+String diagrams are a helpful way to define more complex kernel products\cite{fong_causal_2013}. For any measurable space $(F,\mathcal{F})$, define the kernel
+\begin{align}
+    \splitter{0.2}:F\to \Delta(\mathcal{F}\otimes\mathcal{F})
+\end{align} 
+by 
+\begin{align}
+    \splitter{0.2}:(x,A)\mapsto \begin{cases}1 & (x,x)\in A\\ 0 & (x,x)\not\in A \end{cases}
+\end{align} 
+and given the indiscrete space $(*,\{\emptyset, *\})$ define
+\begin{align}
+    \stopper{0.2}:&F\to \Delta(\{\emptyset,*\});\\
+                  &(x,*)\mapsto 1\\
+                  &(x,\emptyset)\mapsto 0
+\end{align}
+
+and finally define
+\begin{align}
+    I_F:&F\times \mathcal{F} \to [0,1]\\
+      &(x,A)\mapsto \delta_x(A)
+\end{align}
+
+Note that for any measure $\mu\in \Delta(\mathcal{F})$, $\mu I_F=\mu$, for any kernel $L:F\times \mathcal{G}\to [0,1]$ $IL=L$ and any kernel $M:E\to \mathcal{F}$, $MI=M$.
+
+Given measurable spaces $(E,\mathcal{F})$, $(F,\mathcal{F})$ and $(G,\mathcal{G})$ and kernels $K_1:E\to \Delta(\mathcal{F})$, $K_2:E\to \Delta(\mathcal{G})$, $L:F\to \Delta(\mathcal{G})$ and $\splitter{0.2}:E\to \Delta(\mathcal{E}\otimes\mathcal{E})$, define
+
+\begin{center}
+    \begin{tikzpicture}[auto ,node distance =1 cm and 2cm ,on grid ,
+    semithick ,
+    variable/.style ={ circle ,top color =white , 
+    draw , text=blue , minimum width =1 cm},
+    kernel/.style={rectangle,draw}
+    ]
+
+\node (M) at (0,-1)  {$E$};
+\node (N) at (0,0.5) {$\Delta(\mathcal{E})$};
+\draw (M) --  (N);
+\end{tikzpicture}
+\end{center}
+
+To be the kernel $I_E$, 
+
+\begin{center}
+    \begin{tikzpicture}[auto ,node distance =1 cm and 2cm ,on grid ,
+    semithick ,
+    variable/.style ={ circle ,top color =white , 
+    draw , text=blue , minimum width =1 cm},
+    kernel/.style={rectangle,draw}
+    ]
+
+\node (M) at (0,-1)  {$E$};
+\node[kernel] (K) at (0,0) {$K_1$};
+\node (N) at (0,1) {$\Delta(\mathcal{F})$};
+\draw (M) -- (K);
+\draw (K) -- (N);
+\end{tikzpicture}
+\end{center}
+
+To be the kernel $K$. We write the kernel product $K_1L$ as
+
+\begin{center}
+    \begin{tikzpicture}[auto ,node distance =1 cm and 2cm ,on grid ,
+    semithick ,
+    variable/.style ={ circle ,top color =white , 
+    draw , text=blue , minimum width =1 cm},
+    kernel/.style={rectangle,draw}
+    ]
+
+\node (M) at (0,-1)  {$E$};
+\node[kernel] (K) at (0,0) {$K_1$};
+\node[kernel] (L) at (0,1) {$L$};
+\node (N) at (0,2) {$\Delta(\mathcal{G})$};
+\draw (M) -- (K);
+\draw (K) -- (L);
+\draw (L) -- (N);
+\end{tikzpicture}
+\end{center}
+
+We understand the following two diagrams to refer to the product $\splitter{0.15}(K_1\otimes K_2)$
+
+\begin{center}
+    \begin{tikzpicture}[auto ,node distance =0.8 cm and 1cm ,on grid ,
+    semithick ,
+    variable/.style ={ circle ,top color =white , 
+    draw , text=blue , minimum width =1 cm},
+    kernel/.style={rectangle,draw}
+    ]
+    
+    \node (M) at (0,-1)  {$E$};
+    \node[kernel] (K1K2) at (0,0.5) {$K_1\otimes K_2$}; 
+    \node (kleft) [left = 0.3cm of K1K2.south] {};
+    \node (kright) [right = 0.3cm of K1K2.south] {};
+    \node (klefttop) [left = 0.4cm of K1K2.north] {};
+    \node (krighttop) [right = 0.4cm of K1K2.north] {};
+    \node (N) [above = of K1K2] {$\Delta(\mathcal{F}\otimes\mathcal{G})$};
+    \draw (M) -- (0,-0.3);
+    \draw (0,-0.3) to [bend left] (kleft.center);
+    \draw (0,-0.3) to [bend right] (kright.center);
+    \draw (klefttop.center) to ++(0,0.3);
+    \draw (krighttop.center) to ++(0,0.3);
+    \end{tikzpicture}
+    \begin{tikzpicture}[auto ,node distance =1 cm and 1cm ,on grid ,
+    semithick ,
+    variable/.style ={ circle ,top color =white , 
+    draw , text=blue , minimum width =1 cm},
+    kernel/.style={rectangle,draw}
+    ]
+    \node (M) at (0,-1)  {$E$};
+    \node[kernel] (K1) at (-0.5,0.5) {$K_1$};
+    \node[kernel] (K2) [right = of K1] {$K_2$};
+    \node (C) [below right = 0.8cm and 0.5cm of K1] {};
+    \node (N) [above right = 0.8cm and 0.5cm of K1] {$\Delta(\mathcal{F}\otimes\mathcal{G})$};
+    \draw (M) to (C.center);
+    \draw (C.center) to [bend right] (K2);
+    \draw (C.center) to [bend left] (K1);
+    \draw (K1) to ++(0,0.6);
+    \draw (K2) to ++(0,0.6);
+    \end{tikzpicture}
+\end{center}
+
+Of particular interest is the kernel $\splitter{0.15}(K_1\otimes I_E)$:
+\begin{center}
+\begin{tikzpicture}[auto ,node distance =1 cm and 1cm ,on grid ,
+semithick ,
+variable/.style ={ circle ,top color =white , 
+draw , text=blue , minimum width =1 cm},
+kernel/.style={rectangle,draw}
+]
+    \node (M) at (0,-1)  {$E$};
+    \node[kernel] (K1) at (-0.5,0.5) {$K_1$};
+    \node (K2) [right = of K1] {};
+    \node (C) [below right = 0.8cm and 0.5cm of K1] {};
+    \node (N) [above right = 0.8cm and 0.5cm of K1] {$\Delta(\mathcal{F}\otimes\mathcal{E})$};
+    \draw (M) to (C.center);
+    \draw (C.center) to [bend right] (K2.center);
+    \draw (C.center) to [bend left] (K1);
+    \draw (K1) to ++(0,0.6);
+    \draw (K2.center) to ++(0,0.6);
+    \end{tikzpicture}
+\end{center}
+
+For any kernel $K:E\to\Delta(\mathcal{F})$, define $\overline{K}:=\splitter{0.15}(K_1\otimes I_E)$.
+
+For any $\mu\in \Delta(\mathcal{E})$, we have $\mu \overline{K}(A\times B)=\int_B K(A;x) \mu(dx)$. If $(E,\mathcal{E})$ is a discrete space then we have $\mu \overline{K}(A\times B)=\sum_{x\in B} K_1(A;x) \mu(x)$\cite{fong_causal_2013}.
+
+It is useful to define notions analogous to independence and conditional independence of random variables with respect to the kernel $K$. This is motivated by the notion of extended conditional independence:
+
+\begin{definition}[Extended conditional independence (Dawid (2010)\cite{dawid_beware_2010})]\label{def:eci}
+Given a measurable space $(F,\mathcal{F})$, a collection of parameters $S$ along with a variable $Y$ taking values in $S$, a set of $S$-indexed probability distributions $\{P_i\}_{i\in \mathcal{S}}\subset\Delta(\mathcal{F})$ and random variables $\RV{X}$, $\RV{V}$ on $(X,\mathcal{X})$ and $(V,\mathcal{V})$, extended conditional independence overloads the $\CI$ symbol to say
+\begin{align}
+    \RV{X}\CI_{\{P_i\}} Y | \RV{V}
+\end{align}
+
+Iff $P_i(\RV{X}|\RV{V})=P_j(\RV{X}|\RV{V})$ for all $i,j\in S$ wherever both $P_i(\RV{X}|\RV{V})$ and $P_j(\RV{X}|\RV{V})$ are defined.
+\end{definition}
+
+This motivates the following definitions of independence for a Markov kernel $K$:
+
+\begin{definition}[Universal independence]\label{def:univ_indep}
+Given measurable spaces $(E,\mathcal{E})$ and $(F,\mathcal{F})$, a kernel $K:E\times\mathcal{F}\to[0,1]$ and random variables $\RV{X}:(E,\mathcal{E})\to (X,\mathcal{X})$,$\RV{Y}:(F,\mathcal{F})\to (Y,\mathcal{Y})$, we say that $\RV{X}$ and $\RV{Y}$ are universally independent with respect to $K$ iff for all $\mu\in \Delta(\mathcal{E})$, $\RV{X}\CI_{\mu \overline{K}} \RV{Y}$. 
+
+We will write this $\RV{Y} \CII_K \RV{X}$.
+
+Given a third random variable $\RV{V}:( F,\mathcal{F})\to(V,\mathcal{V})$, $\RV{X}$ and $\RV{Y}$ are universally conditionally independent with respect to $K$ and $\RV{V}$ iff for all $\mu\in \Delta(\mathcal{E})$, $\RV{X}\CI_{\mu \overline{K}} \RV{Y}|\RV{V}$.
+
+We will write this $\RV{Y} \CII_K \RV{X} | \RV{V}$.
+\end{definition}
+
+\begin{definition}[Domain invariance]\label{def:domain_indep}
+Given measurable spaces $(E,\mathcal{E})$ and $(F,\mathcal{F})$, a kernel $K:E\times\mathcal{F}\to[0,1]$ and a random variable $\RV{Y}:( F,\mathcal{F})\to (Y,\mathcal{Y})$, we say $\RV{Y}$ is domain invariant with respect to $K$ if, defining $P_{K(\cdot;e)}(\RV{Y}):=Y_*K(\cdot;e)$, we have $P_{K(\cdot;e)}(\RV{Y}) = P_{K(\cdot;e')}(\RV{Y})$ for all $e,e'\in E$.
+
+Given $\RV{V}:(F,\mathcal{F})\to (V,\mathcal{V})$, $\RV{Y}$ is domain invariant with respect to $K$ conditional on $\RV{V}$ if $P_{K(\cdot;e)}(\RV{Y}|\RV{V}) = P_{K(\cdot;e')}(\RV{Y}|\RV{V})$ for all $e,e'\in E$ wherever both sides are uniquely defined.
+\end{definition}
+
+Domain conditional invariance is clearly closely connected with extended conditional independence. In particular, given $\{P_i\}_{i\in \mathcal{S}}$ we can define the kernel $K_S:i\mapsto P_i$ in which case extended conditional independence is equivalent to domain conditional invariance with respect to $K_S$.
+
+In addition, universal independence is equivalent to domain independence under weak conditions.
+
+\begin{theorem}[Equivalence of universal and domain independence]
+Given measurable spaces $(E,\mathcal{E})$, $(F,\mathcal{F})$ along with random variables $\RV{X}:(E,\mathcal{E})\to (X,\mathcal{X})$, $\RV{Y}:(F,\mathcal{F})\to (Y,\mathcal{Y})$ and a kernel $K:(E,\mathcal{F})\to [0,1]$, the following statements are equivalent:
+\begin{enumerate}
+    \item $\RV{X}\CII_K \RV{Y}$
+    \item $\RV{Y}$ is domain independent with respect to $K$ 
+\end{enumerate}
+
+\end{theorem}
+
+\begin{proof}
+If either $\RV{X}$ or $\RV{Y}$ are constant functions, 1 and 2 hold trivially. Suppose for the following that they are not constant.
+
+$1\implies 2$:
+Suppose the converse. Then we have some $u,u'\in E$ such that $P_{K(\cdot;u)}(\RV{Y})\neq P_{K(\cdot;u')}(\RV{Y})$. There is some $C\in \mathcal{Y}$  such that $K(\RV{Y}^{-1}(C);u)\neq K(\RV{Y}^{-1}(C);u')$. Let $A^C_u=\{x|K(\RV{Y}^{-1}(C);x)=K(\RV{Y}^{-1}(C);u)\}$. We know $A_u, A_{u'}\in \mathcal{E}$ and $A_u$ and $A_{u'}$ are non-empty and disjoint.
+
+We also have some $v\in E$ such that $B_v=\RV{X}^{-1}(\RV{X}(v))$ and $B_v^C$ are both nonempty.
+
+\textbf{Case 1:} $B_v\cap A_u\neq \emptyset$ and $B_v^C \cap A_{u'}\neq \emptyset$. Let $\delta_1=\delta_{(B_v\cap A_u)\cup(B_v^C \cap A_{u'})}$. Then we have
+\begin{align}
+    P_{\delta_1\overline{K}}(\RV{Y}\in C|\RV{X}\in B_v) &= P_{K(\cdot;u)}(\RV{Y}\in C)\\
+    &\neq P_{K(\cdot;u')}(\RV{Y}\in C)\\
+    &=  P_{\delta_1\overline{K}}(\RV{Y}\in C|\RV{X}\in B^C_v)
+\end{align}
+This contradicts the assumption that $\RV{X}\CI_{\mu\overline{K}} \RV{Y}$ for all $\mu\in\Delta(\mathcal{F})$.
+
+\textbf{Case 2:} $B_v\cap A_{u'}\neq \emptyset$ and $B_v^C \cap A_{u}\neq \emptyset$. This is analogous to case 1 with symbols interchanged.
+
+\textbf{Case 3:} $B_v\cap A_u\neq \emptyset$ and $B_v \cap A_{u'}\neq \emptyset$. Consider an arbitrary $u''\in B_v^C$. We have $P_{K(\cdot;u)}(\RV{Y})\neq P_{K(\cdot;u'')}(\RV{Y})$ or $P_{K(\cdot;u')}(\RV{Y})\neq P_{K(\cdot;u'')}(\RV{Y})$. By assumption $B_v^C\cap A_{u''}\neq \emptyset$. Then an analogous argument to case 1 indicates that $\RV{X}$ and $\RV{Y}$ are not universally independent in this case.
+
+\textbf{Case 4:} $B^C_v\cap A_u\neq \emptyset$ and $B^C_v \cap A_{u'}\neq \emptyset$. This is analogous to case 3 with symbols interchanged.
+
+$2\implies 1$:
+We have for all $u\in E$, $P_{K(\cdot;u)}(\RV{Y})=P_K(\RV{Y})$ for some $P_K\in \Delta(\mathcal{Y})$. But $P_{K(\cdot;u)}(\RV{Y}\in A) = K(\RV{Y}^{-1}(A);u)$ and $P_{\mu\overline{K}}(\RV{X}\in B,\RV{Y}\in A) = \int_{\RV{X}^{-1}(B)} K(\RV{Y}^{-1}(A);u) \mu(du)=P_K(\RV{Y}\in A)\mu(\RV{X}^{-1}(B))$.
+
+\end{proof}
+
+\begin{theorem}[Equivalence of universal and domain conditional independence]\label{th:univ_dom_cond_equiv}
+Given measurable spaces $(E,\mathcal{E})$, $(F,\mathcal{F})$ along with random variables $\RV{X}:(E,\mathcal{E})\to (X,\mathcal{X})$, $\RV{Y},\RV{V}:(F,\mathcal{F})\to (Y,\mathcal{Y})$ and a kernel $K:(E,\mathcal{F})\to [0,1]$, if $\RV{Y}\otimes \RV{V}$ is countably generated then the following statements are equivalent:
+\begin{enumerate}
+    \item $\RV{X}\CII_K\RV{Y}|\RV{V}$
+    \item $\RV{Y}$ is domain independent with respect to $K$ conditional on $\RV{V}$.
+\end{enumerate}
+
+\end{theorem}
+
+\begin{proof}
+If either $\RV{X}$ or $\RV{Y}$ are constant functions, 1 and 2 hold trivially. Suppose for the following that they are not constant.
+
+
+$1\implies 2$:
+Suppose the converse. Then we have some $u,u'\in E$ such that
+\begin{align}
+    P_{K(\cdot;u)}(\RV{Y}|\RV{V})\neq P_{K(\cdot;u')}(\RV{Y}|\RV{V})\label{eq:cond_ieq}
+\end{align} 
+where both quantities are uniquely defined. Let $\mathcal{Z}$ be a countable $\pi$-system generating $\mathcal{Y}\otimes \mathcal{V}$ (Lemma \ref{lem:cgpisys}). Because $(\RV{Y}\times\RV{V})_*K(\cdot;u)$ is a finite measure on $\mathcal{Y}\otimes \mathcal{V}$ for all $u\in E$, equality of $(\RV{Y}\times\RV{V})_*K(\cdot;u)$ and $(\RV{Y}\times\RV{V})_*K(\cdot;u')$ on $\mathcal{Z}$ is sufficient to show that 
+\begin{align}
+    (\RV{Y}\times\RV{V})_*K(\cdot;u)=(\RV{Y}\times\RV{V})_*K(\cdot;u')\label{eq:joint_eq}
+\end{align} 
+However, if Eq. \ref{eq:joint_eq} holds then Eq. \ref{eq:cond_ieq} cannot.
+
+Therefore there must be some $C\in \mathcal{Z}$ such that 
+\begin{align}
+    K((\RV{Y}\times \RV{V})^{-1}(C);u)\neq K((\RV{Y}\times \RV{V})^{-1}(C);u')\label{eq:pointwise_joint_ieq}
+\end{align}
+
+For some $C\in\mathcal{Z}$, let $A^{C}_u=\{x|K((\RV{Y}\times\RV{V})^{-1}(C);x)=K((\RV{Y}\times\RV{V})^{-1}(C);u)\}$. Further, let $A_u=\bigcap_{C\in\mathcal{Z}} A^{C}_u$. Because $\mathcal{Z}$ is countable, we know $A_u, A_{u'}\in \mathcal{E}$ and by Eq. \ref{eq:pointwise_joint_ieq} $A_u$ and $A_{u'}$ are disjoint and non-empty.
+
+We also have some $v\in E$ such that $B_v=\RV{X}^{-1}(\RV{X}(v))$ and $B_v^C$ are both nonempty.
+
+\textbf{Case 1:} $B_v\cap A_u\neq \emptyset$ and $B_v^C \cap A_{u'}\neq \emptyset$. Let $\delta_1=\delta_{(B_v\cap A_u)\cup(B_v^C \cap A_{u'})}$. Note that
+\begin{align}
+    P_{\delta_1\overline{K}}(\RV{Y}\in C,\RV{V}\in D|\RV{X}\in B_v) &= P_{K(\cdot;u)}(\RV{Y}\in C,\RV{V}\in D)\\
+\end{align}
+for all $C\in \mathcal{Y}$ and $D\in \mathcal{V}$. 
+
+Therefore, wherever the following conditional probabilities are uniquely defined by the joint probability of $\RV{Y}$ and $\RV{V}$, we have
+\begin{align}
+    P_{\delta_1\overline{K}}(\RV{Y}|\RV{V},\RV{X}\in B_v) &= P_{K(\cdot;u)}(\RV{Y}|\RV{V})\\
+\end{align}
+and similarly for $\RV{X}\in B_v^C$. But we have some $C\in \mathcal{Y}$, $D\in \mathcal{V}$ such that $P_{K(\cdot;u)}(\RV{Y}\in C|\RV{V}\in D)$ and $P_{K(\cdot;u')}(\RV{Y}\in C|\RV{V}\in D)$ are uniquely defined for their respective joint distributions and
+\begin{align}
+    P_{K(\cdot;u)}(\RV{Y}\in C|\RV{V}\in D)&\neq P_{K(\cdot;u')}(\RV{Y}\in C|\RV{V}\in D)\\
+    \implies P_{\delta_1\overline{K}}(\RV{Y}|\RV{V},\RV{X}\in B_v) &\neq  P_{\delta_1\overline{K}}(\RV{Y}|\RV{V},\RV{X}\in B^C_v)
+\end{align}
+This contradicts the assumption that $\RV{X}\CI_{\mu\overline{K}} \RV{Y}|\RV{V}$ for all $\mu\in\Delta(\mathcal{F})$.
+
+\textbf{Case 2:} $B_v\cap A_{u'}\neq \emptyset$ and $B_v^C \cap A_{u}\neq \emptyset$. This is analogous to case 1 with symbols interchanged.
+
+\textbf{Case 3:} $B_v\cap A_u\neq \emptyset$ and $B_v \cap A_{u'}\neq \emptyset$. Consider an arbitrary $u''\in B_v^C$. We have $P_{K(\cdot;u)}(\RV{Y}|\RV{V})\neq P_{K(\cdot;u'')}(\RV{Y}|\RV{V})$ or $P_{K(\cdot;u')}(\RV{Y}|\RV{V})\neq P_{K(\cdot;u'')}(\RV{Y}|\RV{V})$. By assumption $B_v^C\cap A_{u''}\neq \emptyset$. Then an analogous argument to case 1 indicates that $\RV{X}$ and $\RV{Y}$ are not universally independent in this case.
+
+\textbf{Case 4:} $B^C_v\cap A_u\neq \emptyset$ and $B^C_v \cap A_{u'}\neq \emptyset$. This is analogous to case 3 with symbols interchanged.
+
+$2\implies 1$:
+We have for all $u\in E$, $P_{K(\cdot;u)}(\RV{Y}|\RV{V})=P_K(\RV{Y}|\RV{V})$ for some $P_K\in \Delta(\mathcal{Y})^{\mathcal{V}}$...
+
+\end{proof}
+
+We will simply refer to universal independence, and use the symbol $\CII_K$ to express both notions, with the caveat that unless we can lift \ref{th:univ_dom_cond_equiv} to countably generated spaces the equivalence has not been shown to hold for continuous variables $\RV{Y}$ or $\RV{V}$ and even if we can then there may be pathological cases where the spaces are not standard Borel spaces.
+
+\textbf{Conjecture:} The relationship between mutual information and conditional independence is analogous to the relationship between channel capacity and universal conditional independence.

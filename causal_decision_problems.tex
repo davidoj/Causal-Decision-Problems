@@ -1,0 +1,355 @@
+\section{Causal Decision Problems}
+
+A causal decision problem extends a statistical decision problem in that, while an SDP provides us with a loss $D\times \Delta(\mathcal{F})\to [0,\infty)$ that evaluates (decision, state) pairs, a CDP gives us a loss from $\Delta(\mathcal{F})\to [0,\infty)$ that evaluates only consequences. Evaluating the quality of a decsion in an CDP therefore requires an object of the type $D\to \Delta(\mathcal{F})$, which we call a \emph{consequence kernel}.
+
+\begin{definition}[Consequence kernel]
+Given a measurable space $(\Omega,\mathcal{F})$ and a measurable decision set $(D,\mathcal{D})$, a consequence kernel is a Markov kernel $\kappa:D \to \Delta(\mathcal{F})$.
+\end{definition}
+
+\begin{definition}[Causal Decision Problem]
+A causal decision problem (CDP) is a tuple $\langle (\Omega,\mathcal{F},\kappa^*), (D,\mathcal{D}), L, \mathbf{K} \rangle$. The triple $(\Omega,\mathcal{F},\kappa^*)$ is given by the environment, where $\Omega$ is the sample space and $\mathcal{F}$ is a $\sigma$-algebra on $\Omega$. We posit that a true consequence kernel $\kappa^*$ exists which is only known to belong to the class $\mathbf{K}\subset \Delta(\mathcal{F})^D$.
+
+The measurable set $D$ represents the decisions available, and $L:\Delta(\mathcal{F})\to [0,\infty)$ is the loss.
+
+The objective of a causal decision problem is to choose a stochastic decision $\phi\in \Delta(\mathcal{D})$ minimising the loss.
+\end{definition}
+
+In a causal decision problem, the class $\mathbf{K}$ represents the given background knowledge about how the world works. A generalised statistical causal decision problem is a causal decision problem in which, rather than a consequence class $\mathbf{K}$, we are given a random variable and a \emph{generalised causal prospect}.
+
+\begin{definition}[Generalised Causal Theory]\label{def:gen_causal_theory}
+Given a measurable space $(\Omega,\mathcal{F})$, a random variable $\RV{X}:\Omega\to X$ and a decision set $D$, a causal theory is a map $\tau:X \to \Delta(\mathcal{F})^D$ where $\Delta_{\tau}(\mathcal{F})\subset \Delta(\mathcal{F})$ is the domain of $\tau$. A causal theory maps a measurable set to a consequence kernel.
+
+Given a set of probability distributions $\mathbf{P}\subset \Delta(\mathcal{F})$ a causal theory $\tau$ induces a map $\underline{\tau}:2^{\Delta(\mathcal{F})}\to 2^{D\times \Omega \to \Delta(\mathcal{F})}$ defined by $\underline{\tau}:\mathbf{P}\mapsto \{\tau(P)|P\in\mathbf{P}\cap \Delta_{\tau}(\mathcal{F})\}$. We overload the definition of a causal theory to say a causal theory also maps sets of distributions to sets of consequences.
+
+A pair $\mathbf{P}\subset \Delta(\mathcal{F}), \tau$ is \emph{invalid} if $\underline{\tau}(\mathbf{P})=\emptyset$.
+
+Given a set of probability distributions $\mathbf{P}\subset \Delta(\mathcal{F})$ a causal theory $\tau$ induces a map $\underline{\tau}:2^{\Delta(\mathcal{F})}\to 2^{D\times \Omega \to \Delta(\mathcal{F})}$ defined by $\underline{\tau}:\mathbf{P}\mapsto \{\tau(P)|P\in\mathbf{P}\cap \Delta_{\tau}(\mathcal{F})\}$. We overload the definition of a causal theory to say a causal theory also maps sets of distributions to sets of consequences.
+
+\textbf{Example:} We can construct a causal theory from a directed acyclic graph. Suppose we have a DAG $\mathcal{G}$ with nodes $\RV{V}=\{\RV{V}_i|i\in U\}$ and associated measurable space $V=\prod_{i\in U} V_i$. Given $S\subset U$, define a bijection $f:D\to V_S$ such that $f:d_x\mapsto x$ for all $(d_x,x)\in D\times V_S$. Suppose we also have random variables $\RV{V}_i$ on $V_i$ for each $i\in U$ with joint distribution $P_\mu(\RV{V})$. Then $\mathcal{G}$ defines a causal theory $\tau_{\mathcal{G}}:d_x\mapsto P_{\mathcal{G}}(\RV{V}|do(X=x))$. If $V_S=V$ then $\mathcal{G}$ is a causal Bayesian network compatible with $\{\tau_{\mathcal{G}}(P_\mu)(x)|x\in V\}$.
+\end{definition}
+
+\begin{definition}[Causal prospect]\label{def:causal_prospect}
+Given a measurable space $(\Omega,\mathcal{F})$ and a decision set $D$, a causal prospect $\mathscr{T}$ is a set of causal theories.
+
+A causal prospect defines a map $\Delta(\mathcal{F})\to 2^{D\times \Omega \to \Delta(\mathcal{F})}$ by $\mathscr{T}:P\mapsto \{\tau(P)|\tau\in\mathscr{T}\wedge P\in \Delta_{\tau}(\mathcal{F})\}$ for $P\in \Delta(\mathcal{F})$. A causal prospect maps a probability distribution to a set of consequences.
+
+Given some $\mu\in \Delta(\mathcal{F})$, we will define the range of $\mathscr{T}(\mu)$ to be the set $\{\nu\in \Delta(\mathcal{F})|\exists K\in \mathscr{T}(\mu)\wedge \exists d\in D:K(d)=\nu\}$. That is the range of $\mathscr{T}(\mu)$ is the set of every distribution on $\mathcal{F}$ that is considered ``possible'' by $\mathscr{T}$ given the distribution $\mu$.
+
+Similarly, a causal prospect defines a map $\underline{\mathscr{T}}:2^{\Delta(\mathcal{F})}\to 2^{D\times \Omega\to \Delta(\mathcal{F})}$ by $\mathscr{T}:\mathbf{P}\mapsto \{\underline{\tau}(\mathbf{P})|\tau\in\mathscr{T}\}$ for $\mathbf{P}\subset \Delta(\mathcal{F})$. We overload the definition of causal prospect to say it also maps sets of probability distributions to sets of consequences.
+\end{definition}
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 2cm ,on grid ,
+    semithick ,
+    variable/.style ={ circle ,top color =white , 
+    draw , text=blue , minimum width =1 cm},
+    kernel/.style={rectangle,draw}
+    ]
+    \node (T1) {$T$};
+    \node (Y1) [right = of T1] {$Y$};
+    \node (G2) [below right = 1cm and 1cm of T1] {$\mathcal{G}_m$};
+    \draw (T1) -- (Y1);
+    \draw[latex-latex,dashed,red] (T1) [bend left] to (Y1);
+    \end{tikzpicture}
+    \caption{A marginal DAG indicating an unobserved common cause of $\RV{T}$ and $\RV{Y}$ defines a causal prospect.}
+    \label{fig:theory_strength}
+\end{figure}
+
+\textbf{Example:} A causal prospect is defined by a marginal DAG $\mathcal{G}_m$ (figure \ref{fig:theory_strength}). A marginal DAG represents a marginal distribution over unobserved variables\cite{evans_graphs_2016}. Suppose we have measurable sets $T,Y=\{0,1\}$ with random variables $\RV{T},\RV{Y}$ distributed according to $P_\mu(\RV{T},\RV{Y})$, and the decision set $D=\{0,1\}$ also. Fix some measurable set $U$ and let $\mathbf{P}_U = \{P\in \Delta(T\times Y\times U)|P(\RV{T},\RV{Y})=P_\mu(\RV{T},\RV{Y})\}$. Then 
+\begin{align}
+    \mathscr{T}_{\mathcal{G}_m}:P_\mu(\RV{T},\RV{Y})\mapsto \{\kappa(\RV{T},\RV{Y}|d)|\exists P\in \mathbf{P}_U: \kappa(\RV{T},\RV{Y}|d)=\delta_d(\RV{T})\int_{U}P(\RV{Y}|\RV{T},\RV{U})dP(\RV{U})\} \label{eq:doct_hidden}
+\end{align}
+
+
+\begin{definition}[Statistical Causal Decision Problem]\label{def:SCDP}
+A statistical causal decision problem (SCDP) is a tuple $\langle (\Omega,\mathcal{F},\mu,\kappa^*), D, \mathscr{T}, L\rangle$. $(\Omega,\mathcal{F},\mu)$ is a probability space and $\kappa$ is some ``true'' consequence kernel. $(D,\mathcal{D})$ is a measurable space. $\mathscr{T}$ is a causal prospect and $L$ is a loss $L:\Delta(\mathcal{F}\otimes\mathcal{D}\otimes\mathcal{F})\to [0,\infty)$.
+
+The tuple $(\Omega,\mathcal{F},\mu,\kappa^*)$ are given by the environment and may not be directly observed.
+\end{definition}
+
+
+The \emph{aim} of a statistical causal decision problem requires some elaboration.
+
+\begin{definition}[Realisable]
+An SCDP $\langle (\Omega,\mathcal{F},\mu,\kappa^*), D, \mathscr{T}, L\rangle$ is realisable if $\kappa^*\in \mathscr{T}(\mu)$.
+\end{definition}
+% We will call any causal theory $\tau$ ``reliable'' if $\tau(\mu)=\kappa^*$. Note that there may be many different causal theories with this property.
+
+
+\begin{definition}[Decision kernel]
+Given a sample space $\Omega$ and a decision space $D$, a decision kernel is a stochastic map $\delta:\Omega \to \Delta(D)$.
+
+We will usually define some random variable $\RV{Y}:\Omega\to Y$ and the decision kernel will be constant on $\RV{Y}^{-1}(y)$ for all $y\in Y$.
+\end{definition}
+
+\begin{definition}[Observation-decision-consequence joint distribution]
+Given a statistical causal decision problem $\langle (\Omega,\mathcal{F},\mu), D, \mathscr{T},\kappa^*, L\rangle$ and a decision kernel $J:\Omega \to \Delta(D)$, we can define for some $K\in \mathscr{T}(\mu)$ the distribution $P^{J K}_\mu\in \Delta(\Omega \times D \times \Omega)$ by
+
+\begin{center}
+\begin{tikzpicture}[auto ,node distance =1 cm and 2cm ,on grid ,
+    semithick ,
+    variable/.style ={ circle ,top color =white , 
+    draw , text=blue , minimum width =1 cm},
+    kernel/.style={rectangle,draw}
+    ]
+\node (M) at (0,-1) {$\Omega$};
+\node[kernel] (K) at (1,0.5) {$J$};
+\node[kernel] (T) at (2,1.5) {$K$};
+\node (DF) at (-1,2.4) {$\Delta(\mathcal{F})$};
+\node (DD) at (0.5,2.4) {$\Delta(\mathcal{D})$};
+\node (DF2) at (2,2.4) {$\Delta(\mathcal{F})$};
+\draw (M) -- (0,0);
+\draw (0,0) to [bend left] (DF);
+\draw (0,0) to [bend right] (K);
+\draw (K) to (1,1);
+\draw (1,1) to [bend right] (T);
+\draw (1,1) to [bend left] (DD);
+\draw (T) to (DF2);
+\end{tikzpicture}
+\end{center}
+
+We can also write, for $O\times E\times C\in \mathcal{F}\otimes \mathcal{D} \otimes\mathcal{F}$,
+
+\begin{align}
+    P^{J K}_\mu (O\times E\times C) = \int_O \int_E  K(C ;y,x^o) J(\mathrm{d}y; x^o) \mu(\mathrm{d}x^o)
+\end{align}
+
+Given some random variable $\RV{X}:\Omega\to X$, define random variables $\RV{X}^o,\RV{X}^c:\Omega\times D\times \Omega\to X$ by $\RV{X}^o:(\omega^o,d,\omega^c)\mapsto \RV{X}(\omega^o)$ and $\RV{X}^c:(\omega^o,d,\omega^c)\mapsto \RV{X}(\omega^c)$. Define $\RV{D}:(\omega^o,d,\omega^c)\mapsto d$. Then $P^{J K}_\mu(\RV{X}^o,\RV{D},\RV{X}^c)$ is the push forward of $P^{J K}_\mu$ by $\RV{X}^o\otimes\RV{D}\otimes\RV{X}^c$.
+
+
+
+\end{definition}
+
+We are now in a position to define the causal risk $R:\Delta(\mathcal{F})\times  \Delta(\mathcal{F})^{D\times \Omega} \times \Delta(D)^{\Omega}\to [0,\infty)$ by
+\begin{align}
+    R:(\nu,K,J)\mapsto L(P^{J K}_\nu) \label{eq:risk}
+\end{align}
+
+Define the objective risk of a decision kernel $J$ to be
+\begin{align}
+    R(\mu,\kappa^*,J) \label{eq:objective_risk}
+\end{align}
+
+The aim of a statistical causal decision problem is to find a decision kernel $J$ minimising the objective risk.
+
+\subsection{Reduction to Ordinary Statistical Decision Problem}
+
+
+
+\begin{definition}[Loss that depends only on consequences]
+We will say a loss $L$ depends only on the consequences if, given any $\nu,\eta\in \Delta(\mathcal{F}\otimes\mathcal{D}\otimes\mathcal{F})$ and any $C\in \mathcal{F}$, we have
+\begin{align}
+    \nu(\Omega\times D\times C) &= \eta(\Omega\times D\times C) \\
+    \implies L(\nu) &= L(\eta)
+\end{align}
+I anticipate that most losses will only depend on the consequences.
+\end{definition}
+
+\begin{definition}[Linear loss]
+A loss $L$ is linear if, for $\nu,\eta\in \Delta(\mathcal{F}\otimes\mathcal{D}\otimes\mathcal{F})$, $L(\alpha\nu + (1-\alpha)\eta) = \alpha L(\nu) + (1-\alpha) L(\eta)$.
+\end{definition}
+
+\begin{theorem}[Reduction to ordinary statistical decision problem]\label{th:id_scdp}
+Given an SCDP $\langle (\Omega,\mathcal{F},\mu,\kappa^*), D, \mathscr{T}, L\rangle$ where the true consequence kernel $\kappa^*$ is known and the loss $L$ is linear and depends only on the consequences, the problem can be reduced to an ordinary statistical decision problem.
+\end{theorem}
+
+\begin{proof}
+Given some ordinary loss $L_{\text{ord}}:D\times \Delta(\mathcal{F})\to [0,\infty)$, define the ordinary risk some decision kernel $J$ by \cite{wald1950statistical}
+\begin{align}
+    R_{\text{ord}}(J,\nu) &= \int_D L_{\text{ord}}(y,\nu) \int_\Omega J(\mathrm{d}y;x) \nu(\mathrm{d}x)\\
+\end{align}
+
+We will show that an ordinary loss can be constructed such that the ordinary risk matches the causal risk (Equation \ref{eq:risk}).
+
+Define the dogmatic decision kernel $J_y:\Omega\to \Delta(\mathcal{D})$ by $J_y:x \mapsto \delta_y$.
+
+Given $\kappa^*$, define the ordinary loss $L_{\text{ord}}:D\times \Delta(\mathcal{F})\to [0,\infty)$ by 
+\begin{align}
+    L^K_{ord}:y,\nu \mapsto L(P^{J_y \kappa^*}_\nu)
+\end{align}
+
+Consider the probability measure $\eta^\nu_y=\mathds{1}_{\Omega}\otimes \mathds{1}_D\otimes \nu J_y \kappa^*$. Clearly $\eta^\nu_y(\Omega\times D\times C) = P^{J_y \kappa^*}_\nu(\Omega\times D\times C)$, so $L(\eta_y) = L(P^{J_y \kappa^*}_\nu)$.
+
+Note that
+\begin{align}
+    \nu J_y \kappa^*(A) &= \int_\Omega \int_D \nu(dx) \delta_y(dz) \kappa^*(A;dz)\\
+    &= \kappa^*(A;y)
+\end{align}
+
+Given any decision kernel $J$,
+
+\begin{align}
+    R_{\text{ord}}(J,\nu) &= \int_D L(\mathds{1}_{\Omega}\otimes \mathds{1}_D\otimes \kappa^*(\cdot;y)) \int_\Omega J(\mathrm{d}y;x) \nu(\mathrm{d}x)\\
+\end{align}
+
+Note that for any decision kernel $J$ we have $L(P^{J\kappa^*}_\nu) = L(\mathds{1}_\Omega\otimes\mathds{1}_D\otimes \nu J \kappa^*)$.
+
+\begin{align}
+    R(\nu,J,\kappa^*) &= L(\mathds{1}_\Omega\otimes\mathds{1}_D\otimes \nu J \kappa^*)\\
+     &= L\left(\int_\Omega \int_D \mathds{1}_\Omega\otimes\mathds{1}_D\otimes \nu(dx) J_y(dy;x) \kappa^*(\cdot;y)\right)\\
+    &= \int_\Omega \int_D \nu(dx) J_y(dy;x) L(\mathds{1}_\Omega\otimes\mathds{1}_D\otimes  \kappa^*(\cdot;y))\qquad\text{(Linearity)}\\
+    &= R_{\text{ord}}(J,\nu)
+\end{align}
+\end{proof}
+
+It has been said that this reduction requires $\kappa^*$ to be known. In fact, the reduction is always possible given a linear loss that depends only on the consequences, but it is only possible to construct the reduction from known quantities if $\kappa^*$ is known. 
+
+\subsection{Identifiability}
+
+We adapt the definition of identifiability from Galles and Pearl\cite{galles_testing_2013}.
+\begin{definition}[Identifiability]\label{def:identifiability}
+A causal prospect $\mathscr{T}$ is identifiable on some set of distributions $\mathcal{P}\subset\Delta{\mathcal{F}}$ iff for each $\nu\in \mathcal{P}$, $|\mathscr{T}(\nu)|=1$.
+
+That is, if every observed distribution in $\mathcal{P}$ yields a unique set of consequences, then a causal prospect is identifiable.
+\end{definition}
+
+\begin{theorem}[Single theory identifiability]
+A causal prospect consisting of a single theory $\mathscr{T}=\{\tau\}$ is identifiable on $\Delta_{\tau}(\mathcal{F})$.
+\end{theorem}
+
+\begin{proof}
+This follows trivially from the definition of a causal theory (\ref{def:causal_theory}) and of identifiability (\ref{def:identifiability}).
+\end{proof}
+
+More interestingly, any realisable statistical causal decision problem with an identifiable prospect can be reduced to an ordinary statistical decision problem if the loss is linear and depends only on the consequences.
+
+In fact, identifiability is stronger than needed for this result.
+
+\begin{definition}[Weak loss identifiability]
+An SCDP $\langle (\Omega,\mathcal{F},\mu,\kappa^*), D, \mathscr{T}, L\rangle$ is weakly loss identifiable iff for all $J\in \Delta(\mathcal{D})^\Omega$ and $K\in \mathscr{T}(\mu)$, $L(\mu \overline{J} \overline{K}) = L(\mu \overline{J} \overline{\kappa}^*)$.
+\end{definition}
+
+\begin{theorem}[Reduction of realisable identifiable SCDP]\label{th:ident_scdp_red}
+Given an SCDP $\langle (\Omega,\mathcal{F},\mu,\kappa^*), D, \mathscr{T}, L\rangle$ where the loss is linear and depends only on the consequences and $\mathscr{T}$ is weakly loss identifiable and realisable, there is a weak reduction of the SCDP to an ordinary statistical decision problem.
+
+This theorem requires the axiom of choice if $\mathscr{T}$ is allowed to be uncountably large. Usually we will deal with smaller causal prospects than this.
+\end{theorem}
+
+\begin{proof}
+We will show that a loss can be constructed such that the objective risk (Equation \ref{eq:objective_risk}) is equal to $R_{\text{ord}}(J,\mu)$.
+
+Define $\hat{\mathscr{T}}(\nu)$ to be an arbitrary element of $\mathscr{T}(\nu)$.
+
+By assumption, for any $K\in \mathscr{T}(\mu)$ we have $L(\mu \overline{J} \overline{K}) = L(\mu \overline{J} \overline{\kappa}^*)$. Therefore, defining
+\begin{align}
+    L_{\text{ord}}:y,\nu\mapsto L(P_\nu^{J_y \hat{\mathscr{T}}(\nu)})
+\end{align}
+Thus
+\begin{align}
+    L_{\text{ord}}(y,\mu) = L(P_\nu^{J_y \kappa^*(\nu)})
+\end{align}
+
+We have, by analogy to the proof of \ref{th:id_scdp},
+\begin{align}
+    R_{\text{ord}}(J,\mu) = \int_D L(\mathds{1}_{\Omega}\otimes \mathds{1}_D\otimes \kappa^*(\cdot;y)) \int_\Omega J(\mathrm{d}y;x) \mu(\mathrm{d}x)
+\end{align}
+Again, by analogy with the proof of \ref{th:id_scdp} we therefore have
+\begin{align}
+    R(\mu,J,\kappa^*) = R_{\text{ord}}(J,\mu)
+\end{align}
+\end{proof}
+
+
+
+\subsection{Causal Prospects}
+
+
+\begin{example}[Skepticism]
+The causal prospect of \emph{skepticism} holds that ``anything is possible'' (alternatively, that induction is impossible). Given a decision space $D$ and a measurable space $(\Omega,\mathcal{F})$, the prospect of skepticism $\mathscr{T}_\Sigma$ contains every causal theory on $\Delta(F)\to(D\times \Omega\to \Delta(\mathcal{F}))$. 
+
+Given any $\mu,\mu'\in \Delta(\mathcal{F})$, $d\in D$ and $\omega\in \Omega$, skepticism does not distinguish the consequences
+\begin{align}
+    \mathscr{T}_\Sigma(\mu) &= (d,\omega)\mapsto \Delta(\mathcal{F})\\
+                            &= \mathscr{T}_\Sigma(\mu')
+\end{align}
+\end{example}
+
+\begin{example}[Helplessness]
+The causal prospect of \emph{helplessness} holds that decisions have no consequences. Given a decision space $D$ and a measurable space $(\Omega,\mathcal{F})$, the prospect of helplessness $\mathscr{T}_H$ contains only the theory $T_H:\mu\mapsto ((d,\omega)\mapsto \mu)$ for every $\mu\in \Delta(\mathcal{F})$.
+\end{example}
+
+\begin{example}[Ordinary Statistical Decision Problem]
+Suppose we have a statistical causal decision problem $\langle (\Omega,\mathcal{F},\mu), D, \mathscr{T}_H,\kappa, L\rangle$ where the causal prospect $\mathscr{T}_H$ is helplessness. Suppose also that $\kappa:d\mapsto \mu$ for all $d\in D$ (note that this means that the theory $\tau_H$ is reliable). Suppose we also have some decision function $J$ and define $P^{J\kappa}_\mu \in \Delta(\Omega\times D\times \Omega)$ as above.
+
+Consider some a random variable $\RV{X}: \Omega\to X$. As above, define $\RV{X}^o:\Omega\times D\times \Omega \to X$ to be an ``observation'' random variable and $\RV{X}^c$ to be a ``consequence'' random variable. Note that by the assumption of helplessness, $P^{J K}_\mu (\RV{X}^c) = P_\mu (\RV{X}^o)$ for all $K\in \mathscr{T}(\mu)$. Suppose that we can identify $D$ with $X$, and $\RV{D}:\Omega\times D\times \Omega\to D$ is also a random variable.
+
+An ordinary statistical decision problem posits a loss $L_{\mathrm{ord}}:\Delta(\Omega)\times D\to [0,\infty)$. We have two obvious options for a loss that matches this:
+
+\begin{align}
+    L_0:(P^{J K}_\mu(\RV{X}^o,\RV{D},\RV{X}^c)&\mapsto \mathbb{E}\left[ L_{\mathrm{ord}}(P^{J K}_\mu(\RV{X}^o),\RV{D})\right] \label{eq:ordinary_loss}\\
+    L_1:(P^{J K}_\mu(\RV{X}^o,\RV{D},\RV{X}^c)&\mapsto \mathbb{E}\left[ L_{\mathrm{ord}}(P^{J K}_\mu(\RV{X}^c),\RV{D})\right]\label{eq:causal_loss}
+\end{align}
+
+By the assumption of helplessness, $P^{J K}_\mu(\RV{X}^c)=P^{J K}_\mu(\RV{X}^o)=P_\mu(\RV{X}^o)$ for all $K\in \mathscr{T}(\mu)$, and so these losses agree. This is helpful, as we can also observe that
+
+\begin{align}
+    P^{J K}_\mu(\RV{X}^o) &= \int_O \int_E  \tau(\mu)(X |d,x^o) J(\mathrm{d}d|x^o) \mu(\mathrm{d}x^o) \\
+                                 &= \int_O \int_E  J(\mathrm{d}d|x^o) \mu(\mathrm{d}x^o)
+\end{align}
+
+And so Eq. \ref{eq:ordinary_loss} is equal to the risk $R_{\mathrm{ord}}(J,\mu)$ of an ordinary statistical decision problem. On the other hand, in the causal domain we are typically interested in defining losses that depend on consequences and not observations, so the equality of Eq. \ref{eq:causal_loss} shows that an ordinary statistical decision problem can also be posed in terms of the consequences of a decision.
+\end{example}
+
+We have examples of two causal prospects - skepticism and helplessness, but we'd really like to be able to define a wider range of prospects. Previously, we've seen that causal Bayesian networks can represent causal theories or causal prospects. 
+
+Additional restrictions must be placed on causal prospects in order to yield non-trivial results. Assumptions made in the existing causal frameworks of potential outcomes, graphical models and their variants serve this purpose. Causal prospects are very abstract objects and it's helpful to have a language for expressing restrictions on causal prospects compactly and transparently. 
+
+For all the following definitions, suppose we have a statistical causal decision problem $\langle (\Omega,\mathcal{F},\mu,\kappa), D, \mathscr{T}, L\rangle$ with elements defined as in Definition \ref{def:SCDP}.
+
+\begin{definition}[Trivial decision]
+A causal prospect $\mathscr{T}$ admits a trivial decision $d_0\in D$ if $\mathscr{T}(\mu)(\cdot;d_0)=\{\mu\}$ for all $\mu\in \Delta(\mathcal{F})$. The prospect of helplessness obtains when every decision is trivial.
+\end{definition}
+
+\begin{definition}[Universal conditional independence (causal prospect)]
+Suppose $\mathcal{F}$ is countably generated.
+
+Take some random variable $\RV{E}:D\times \Omega\to E$ such that for all $A\in \mathcal{E}$, $\RV{E}^{-1}(A)=(B,\Omega)$ where $B$ is a proper subset of $D$. That is, $\RV{E}$ is non-constant on $D$ and constant on $\Omega$. Suppose that we also have some random variables $\RV{X},\RV{V}:D\times \Omega \to E$.
+
+We overload the $\CII$ operator from Definition \ref{def:univ_indep} to apply to causal prospects. We say $\RV{X}\CII_{\mathscr{T}} \RV{E} | \RV{V}$ if for each $K$ in $\mathscr{T}(\Delta(\mathcal{F}))$ we have $\RV{X}\CII_{K} \RV{E} | \RV{V}$.
+\end{definition}
+
+\begin{definition}[Mechanism]
+Given a measurable space $(\Omega,\mathcal{F})$ and a collection of random variables $\RV{W} = \{\RV{W}_i:\Omega\to W_i|i\in [0,..,N]\}$, a mechanism $m$ is some element of $\RV{W}\times \mathscr{P}(\RV{W})$. A trivial mechanism is any mechanism $m=(\RV{W}_i,\{\RV{W}_i\}\cup \RV{V})$ where $\RV{W}_i\in \RV{W}$ and $\RV{V}\subset\RV{W}$. A nontrivial mechanism is any mechanism that is not trivial.
+
+For a mechanism $m=(\RV{W}_i,\RV{V})$, call $\RV{W}_i$ the child is ($\text{Ch}_m=\RV{W}_i$) and $\RV{V}$ the parents are ($\text{Pa}_m=\RV{V}$).
+\end{definition}
+
+Graphical models assume \emph{mechanism invariance} for some set of causal mechanisms. That is, given some causal graphical model $\mathcal{G}$ where we identify the vertices with random variables $\RV{V}=(\RV{V}_0,..,\RV{V}_n)$, call the pairs $(\RV{V}_i,\PA{\mathcal{G}}{\RV{V}_i})$ \emph{causal mechanisms}. Given some intervention $do(\RV{V}_k=x)$, a graphical model holds that for all $i\neq k$, \begin{align}
+    P(\RV{V}_i|\PA{\mathcal{G}}{\RV{V}_i},do(\RV{V}_k=x)) = P(\RV{V}_i|\PA{\mathcal{G}}{\RV{V}_i})
+\end{align}
+
+In general we will say a causal prospect is mechanism invariant for the mechanism $(\RV{V}_i,\PA{}{\RV{V}_i})$ if for all $d\in D$ and $\mu\in \Delta(\mathcal{F})$ we have $\mathscr{T}(\mu)(\cdot;d)\subset \{\nu\in \Delta(\mathcal{F})| P_{\nu}(\RV{V}_i|\PA{}{\RV{V}_i}) = P_\mu(\RV{V}_i|\PA{}{\RV{V}_i})\}$.
+
+We are only interested in invariance for nontrivial mechanisms:
+
+\begin{theorem}\label{th:trivial_invariance}
+All causal prospects are mechanism invariant for trivial mechanisms.
+\end{theorem}
+
+\begin{proof}
+Given a trivial mechanism $m=(\RV{W}_i,\{\RV{W}_i\}\cup\RV{V})$, $P_\mu(\RV{W}_i\in B|\RV{W}_i,\RV{V})(\omega)=\delta_w(B)$ for any $\mu, B, \omega$.
+\end{proof}
+
+In general, the existence of a trivial decision and a universal conditional independence implies a mechanism invariance.
+
+\begin{theorem}[Universal Conditional Independence + Trivial Decision implies Mechanism Invariance]\label{th:univ_ti_mi}
+A causal prospect with a trivial decision $d_0\in D$ and the universal independence $\RV{X}\CII_{\mathscr{T}} \RV{E} | \RV{V}$ is mechanism invariant for the mechanism $(\RV{X},\RV{V})$.
+\end{theorem}
+
+\begin{proof}
+By Theorem \ref{th:univ_dom_cond_equiv}, we have for all $K\in \mathscr{T}(\mu)$ and $d\in D$ that $P_{K(\cdot;d)}(\RV{X}|\RV{V})=P_{K(\cdot;d_0)}(\RV{X}|\RV{V})$. But by triviality $P_{K(\cdot;d_0)}(\RV{X}|\RV{V})=P_\mu(\RV{X}|\RV{V})$.
+\end{proof}
+
+A causal prospect $\mathscr{T}$ with some set of universal conditional independences and no other assumptions does not distinguish between decisions. That is, for every theory $\tau_1\in\mathscr{T}$ that, given $\mu$, maps the decision $d_1$ to $\nu_1$ and the decision $d_2$ to $\nu_2$, there is an additional valid theory $\tau_2\in\mathscr{T}$ that given $\mu$ maps $d_1$ to $\nu_2$ and $d_2$ to $\nu_1$. 
+
+We define the notion of \emph{known consequence} to capture the idea that we have partial prior knowledge about the effect of a decision.
+
+\begin{definition}[Known Consequence]
+Given a random variable $\RV{V}:\Omega\to V$, a prospect $\mathscr{T}$ identifies a decision $d\in D$ as having a known consequence on $\RV{V}$ if there exists some random variable $\RV{W}:\Omega\to W$ and $\eta\in \Delta(\mathcal{V}\otimes \mathcal{W})$ such that for all $\mu\in\Delta(\mathcal{F})$, $\mathscr{T}(\mu)(\cdot;d)\subset\{\nu\in\Delta(\mathcal{F})|P_\nu(\RV{V}|\RV{W})=P_\eta(\RV{V}|\RV{W})\}$.
+
+We will abuse notation to write this assumption as $\mathscr{T}(\cdot):d\mapsto \{P_\eta(\RV{V}|\RV{W})\}$.
+\end{definition}
+
+We use the term known consequence rather than intervention, as the latter term combines known consequences with mechanism invariances.
+
+It is not always necessary to assume that a trivial action is available.

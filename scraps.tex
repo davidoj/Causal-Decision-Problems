@@ -1,0 +1,819 @@
+
+
+
+% \section{Introduction}
+
+
+
+% There are [a number] of schools of work concerned with the task of causal inference, broadly construed. I haven't worked out how to categorise them yet. The schools themselves have some overlap and are applications can often draw from more than one of them:
+
+% \begin{itemize}
+%     \item Causal graphical models
+%     \item Potential outcomes/treatment effects
+%     % \item Structural equation models
+%     % \item Instrumental variables, difference in differences (?)
+% \end{itemize}
+
+% While there is substantial agreement between the three schools of thought, they are associated with different mechanisms and fields of application. 
+
+% Causal graphical models have a strong focus on formalising the psychological phenomenon of causal reasoning. While I haven't seen it said in so many words, one of the motivating reasons behind this method is something like the following argument \cite{hartnett_build_nodate}:
+% \begin{itemize}
+%     \item Humans can reason quite naturally about causal relationships, but not so much probabilistic ones
+%     \item Human reasoning still possesses substantial advantages over algorithmic reasoning
+%     \item Some of this advantage may stem from the ability to reason about causal relationships 
+% \end{itemize}
+
+% Pearl in particular often stresses the ease with which humans can reason causally \cite{pearl_causality:_2009}. A key hypothesis of the approach of causal graphical models is that humans can more reliably deduce probabilistic independences from directed causal relationships than they can by reasoning directly about those independences (to my knowledge, this hypothesis has not been tested). Even when not using graphical models, we commonly employ causal reasoning in this manner: consider that ``$A$ depends on $B$'' refers to a directed relationship, while $A\not\CI B$ is an undirected relationship.
+
+% The endeavour of \emph{causal structure discovery} is peculiar to the graphical causal models approach. Causal structure discovery aims to find the ``true causal graph'' over a set of variables $\mathcal{V}$ from a dataset $D\sim P(\mathcal{V})$. Causal discovery requires strong assumptions such as complete observability, faithfulness (sometimes also called stability) and/or restrictions on the function class of possible causal relationships \cite{peters_elements_2017}. \textbf{Conjecture:} Even with these assumptions, which are quite strong, it is rare that ``enough'' causal structure can be discovered in order to make the computation of causal effects possible (this \emph{seems} obvious, but needs enough elaboration to justify labelling it as conjecture).
+
+% Some philosophers (particularly Cartwright) are of the opinion that the graphical model approach isn't wholly successful in its endeavour \cite{cartwright_causation:_2004}. The best criticisms, in my view, are:
+% \begin{itemize}
+%     \item A graphical causal model must either arbitrarily exclude causes at some point, or include ``the entire universe''
+%     \begin{itemize}
+%         \item The theory of graphical models would appear to imply that truncation is usually not appropriate, and yet we make use of highly simplified models and expect them to give reasonable results - it's not clear why we should expect this
+%     \end{itemize}
+%     \item Graphical causal models cannot handle a dense set of effects such as in a timeseries
+% \end{itemize}
+
+% In my opinion, the reasons why we might expect most systems to be admit a ``ground truth'' graphical causal model and why or how we can sometimes construct simple models that capture the important features of the ground truth are important questions for the causal graphical models approach.
+
+% The potential outcomes school is concerned chiefly with the computation of a variety of \emph{treatment effects}. The basic notion of a treatment effect comes from a counterfactual definition: given an outcome $X$ and a treatment $A\in\{0,1\}$ (both random variables), we imagine that there are in fact two ``potential'' outcomes: $X_0$ and $X_1$, being the outcome if treatment had been received and the outcome if it had not been received respectively. The treatment effect is 
+% \begin{align}
+%     \text{TE} = Y_1 - Y_0
+% \end{align}
+
+% The treatment effect itself is unobservable; we can only observe $X_0$ if $A=0$ and $X_1$ if $A=1$ respectively. Nonetheless, under appropriate conditions we might be able to infer quantities derived from the treatment effect such as the average treatment effect (ATE) $\mathbb{E}[X_1]-\mathbb{E}[X_0]$\cite{rubin_causal_2005}. Note that $P(X_a)$ corresponds to $P(X|do(A=a))$ in graphical model notation, though $X_1-X_0$ doesn't have a representation in the standard notation of graphical causal models and more complex queries such as $P(X_a|Z=z)$ require additional interpretation to be translated to queries of a causal graph \cite{shpitser_complete_2008}.
+
+% The potential outcomes literature develops a number of treatment effects and conditions under which they can be estimated, as well as estimators for these effects. Treatment effects are sometimes, but not always, quantities that have some relevance in selecting policies \cite{heckman_policy-relevant_2001}. In contrast to the graphical models literature, the potential outcomes literature is much more focused on the precise nature of the effect being estimated by a particular combination of experiment and estimator.
+
+% The notion of a counterfactual is an alternative to the notion of a set of directed relationships for the purposes of thinking causally. As with many cognitive aids, variety is probably helpful here. Proponents of the counterfactual approach claim they find counterfactuals to be easier to understand \cite{rubin_authors_2008}.
+
+% I don't consider the counterfactual approach to be successful in avoiding the need for reasoning about directed relationships. The assumption of ignorability that permits causal inference for the effect of treatment assignment $A$ on outcome $X$ is:
+% \begin{align}
+%     \{X_0,X_1\}\CI A
+% \end{align}
+% This assumption can be justified with an informal argument like ``in a randomised experiment, $A$ depends only on a random source, and not on anything that might influence $X_0$ or $X_1$''. This is a structural statement about directed relationships between $A$, $X_0$ and $X_1$ and ``anything else''. We could formalise this statement with a set of directed graphs, and the theory of causal graphical models could be applied to this set of graphs. Perhaps graphical models are an overkill for this purpose (I am not so sure). More subtle structural concerns can also be relevant in the potential outcomes world. For example, consider the following two structures:
+
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 2cm ,on grid ,
+% semithick ,
+% variable/.style ={ circle ,top color =white , 
+% draw , text=blue , minimum width =1 cm},
+% kernel/.style={rectangle,draw}
+% ]
+% \node (A) {$A$};
+% \node (Z) [above right = of A] {$Z$};
+% \node (X) [right = 4cm of A] {$X$};
+% \node (A1) [right = 4cm of X] {$A$};
+% \node (U1) [above right = 2cm and 1cm of A1] {$U1$};
+% \node (Z1) [above right = of A1] {$Z$};
+% \node (U2) [above right = 1cm and 1cm of Z1] {$U2$};
+% \node (X1) [right = 4cm of A1] {$X$};
+% \draw (A) -- (X);
+% \draw (Z) -- (X);
+% \draw (Z) -- (A);
+% \draw (U1) -- (Z1);
+% \draw (U2) -- (Z1);
+% \draw (U1) -- (A1);
+% \draw (U2) -- (X1);
+% \draw (A1) -- (X1);
+% \end{tikzpicture}
+% \end{center}
+
+% The right-hand structure is sometimes referred to as an ``M-structure''. In the first case, 
+
+% \begin{align}
+%     P(X|do(A=a))=\sum_{z\in\U{Z}} P(X|Z=z,A=a) P(Z=z) \label{eq:normal_confounder}
+% \end{align}
+% while in the second case 
+% \begin{align}
+%     P(X|do(A=a))&=P(X|A=a) \label{eq:m_structure}\\
+%     &\neq \sum_{z\in\U{Z}} P(X|Z=z,A=a) P(Z=z)
+% \end{align}
+% Given observations of $\{X,A,Z\}$, the two structures are indistinguishable. The potential outcomes school has developed methods such as the \emph{propensity score} for estimating the right hand side of Eq. \ref{eq:normal_confounder}, which would not be appropriate if the structure associated with Eq. \ref{eq:m_structure} were the correct structure. This distinction can also be described using the language of potential outcomes\cite{sjolander_propensity_2009}. The first case corresponds to
+% \begin{align}
+%     X_a &\CI A | Z\\
+%     X_a &\not\CI A
+% \end{align}
+
+% While the second corresponds to
+
+% \begin{align}
+%     X_a &\not\CI A | Z\\
+%     X_a &\CI A|Z
+% \end{align}
+
+% In my view, the causal models are more illuminating than the sets of conditional independence statements here. Guidance from proponents of the potential outcomes approach has been unclear on the question presented here \cite{rubin_authors_2008}\cite{noauthor_resolving_2009}.
+
+
+
+% \begin{definition}[Ordering causal theories]
+% A causal theory $\tau_1$ is \emph{weaker} or \emph{more general} than $\tau_2$ on $\mathbf{P}\subset \Delta(\mathcal{F})$ if $\underline{\tau}_1(\mathbf{P}) \supseteq \underline{\tau}_2(\mathbf{P})$. It is strictly weaker or strictly more general if it is a proper superset. We also say that $\tau_2$ is (strictly) stronger or (strictly) less general on $\mathbf{P}$.
+
+
+
+% We say that a causal theory $\mathscr{T}_1$ is more general than $\mathscr{T}_2$ if $\mathscr{T}_1(\mu)(d) \supset \mathscr{T}_2(\mu)(d)$ for all $\mu\in \Delta(\Omega)$, $d\in D$, denoted by $\mathscr{T}_1\trianglerighteq\mathscr{T}_2$. If $\mathscr{T}_1\trianglerighteq\mathscr{T}_2$ and $\mathscr{T}_2\trianglerighteq\mathscr{T}_1$ then $\mathscr{T}_1=\mathscr{T}_2$.
+
+% We will also consider orders on $\mathscr{T}(P_X)$, where $\mathscr{T}_1(P_X)\trianglerighteq\mathscr{T}_2(P_X)$ if $\mathscr{T}_1(P_X)(d) \supset \mathscr{T}_2(P_X)(d)$ for all $d\in D$.
+% \end{definition}
+
+% The non-backtracking assumption avoids a number of pathological possibilities.
+
+% \begin{definition}[$\RV{X}$-compatible]
+% Given a probability space $(\Omega,\mathcal{F},\mu)$, random variable $\RV{X}:\Omega\to X$ and measurable space $(D,\mathcal{D})$, a causal theory $\tau$ is $\RV{X}$-compatible if for any distribution $\mu\in \Delta(\mathcal{X})$, it does not transform the marginal distribution of the collection $\RV{X}_S$: \begin{align}
+%     \tau(\mu)(\RV{X}_S|\RV{D}=d)&=P_\mu(\RV{X}_S)\\
+%                                 &:=P^\tau_\mu(\RV{X}_S)
+% \end{align}
+% For all $d\in D$.
+% \end{definition}
+
+% We will always work with non-backtracking causal theories, and also with near independent and identically distributed causal theories.
+
+% \begin{definition}[Domain Independent and Identically Distributed]
+% Given measurable spaces $(\Omega,\mathcal{F})$ and $(D,\mathcal{D})$ and a sequence of random variables $\RV{X}=(X_i:\Omega\to X|i\in \mathbb{N})$, a causal theory $\tau$ is domain IID iff all $\mu\in \Delta_{\tau}(\mathcal{F})$ are such that there exists $P_\mu\in\Delta(\mathcal{X})$ where $\mu(\RV{X})=\prod_{i=0}^\infty P_\mu(\RV{X}_0)$.
+% \end{definition}
+
+% \begin{definition}[Image Independent and Identically Distributed]
+% Given measurable spaces $(\Omega,\mathcal{F})$ and $(D,\mathcal{D})$ and a sequence of random variables $\RV{X}=(X_i:\Omega\to X|i\in \mathbb{N})$, a causal theory $\tau$ is image IID iff for each $d\in D$ and $\mu\in \Delta_{\tau}(\mathcal{F})$, the distribution $P^\tau_\mu(\RV{X}):=\tau(\mu)(d)(\RV{X})$ is independent and identically distributed.
+% \end{definition}
+
+% \begin{definition}[Component Independent and Identically Distributed]
+% We will say a causal theory $\tau$ is component IID iff it is both domain and image IID.
+
+% A causal prospect $\mathscr{T}$ is component IID iff every theory in $\mathscr{T}$ is component IID.
+% \end{definition}
+
+
+We aim to formulate causal problems as statistical decision problems. The key difference to a standard stasticial decision problem is that the decision points (which here we call actions $A$) are elements of the joint probability distribution $P(X,A)$. We also assume preferences are over distributions on $\Delta(\U{X}\times\U{A})$ rather than over action-distribution pairs $\Delta(\U{X})\times\U{A}$. The definition of a causal decision problem here is less general than that of a statistical decision problem in \cite{wald1950statistical}.
+
+Our aim is not to formulate specific queries about causal effects under the graphical models or potential outcomes framework as statistical decision problems. Rather, we aim to formulate decision problems that address the same ultimate aims as said queries about causal effects.
+
+A causal decision problem features a set of discrete spaces $\{\U{Q},\U{A},\U{X}\}$ along with the probability distribution $P_{\U{Q}}(Q)$, the kernel $\mu(X|A,Q):\U{A}\times\U{Q}
+\to \Delta(\U{X})$ and a set of kernels $\Phi= (\Delta(\U{A}))^{\U{Q}}$. Each $\phi\in\Phi$ has signature $\phi:\underline{Q}\to \Delta(\underline{A})$ and is called a \emph{decision kernel}. The joint distribution is given by $P_{\phi}(X,A,Q) = \mu(X|A,Q)\phi(A|Q)P_{\U{Q}}(Q)$. There exists a set of preferences over elements of $\Delta(\U{X}\times \U{A})$ which we assume can be expressed as a utility $u:\Delta(\U{X}\times \U{A})\to \mathbb{R}$. 
+
+Causal decision problems can be related to causal graphical models in the following manner: given a decision problem $\mathscr{D}=\langle \U{Q},\U{A},\U{X}, P_{\U{Q}}, \mu, \Phi \rangle$, we say a graph $\mathcal{G}$ is consistent with $\mathscr{D}$ if $\mathcal{G}$ is markov with respect to $P_\phi$ for all $\phi\in\Phi$ and $\PA{\mathcal{G}}{A}=\{Q\}$ and $A\in\ND{\mathcal{G}}{X}$. 
+
+Consider the kernel $\phi_a\in \Phi$ where $\phi_a:q\mapsto \delta_a(A)$. The kernel $\phi_a$ generates the following distribution on $X$:
+\begin{align}
+    P_{\phi_a}(X)&= \sum_{q\in\underline{Q}} \mu(X|A=a,Q=q) P_{\U{Q}}(Q)\\
+                 &= P_{\phi_a}(X|A=a)
+\end{align}
+
+Consider some graph $\mathcal{G}$ consistent with $\mathscr{D}$ with an associated probability distribution $P_{\mathcal{G}}$. Require $P_{\mathcal{G}}(Q)=P_{\U{Q}}(Q)$ and $P_{\mathcal{G}}(X|A,Q)=\mu(X|A,Q)$. Define $U=\PA{\mathcal{G}}{X}\setminus\{A,Q\}$. Then by the definition of the $do$ operation:
+
+\begin{align}
+    P_{\mathcal{G}}(X|do(A=a)) &= \sum_{u\in\U{U},q\in\U{Q}} P_{\mathcal{G}}(X|U=u,Q=q,A=a) P_{\mathcal{G}}(Q=q|U=u) P_{\mathcal{G}}(U=u)\\
+                               &= \sum_{q\in \U{Q}} P_{\mathcal{G}}(X|Q=q,A=a) P_{\mathcal{G}}(Q=q)\\
+                               &= P_{\phi_a}(X)
+\end{align}
+
+Note that for a general $\phi\in\Phi$, $P_{\phi}(X|A=a)\neq P_{\mathcal{G}}(X|do(A=a))$.
+
+\subsection{Optimal decision kernels}
+
+An optimal decision kernel $\phi^*$ is any $\phi\in \Phi$ such that
+
+\begin{align}
+    \phi^* \in \argmin_{\phi\in \Phi} u(P_{\phi}(X,A))
+\end{align}
+
+
+\subsection{Markovian Causal Decision Problems}
+
+A Markovian causal decision problem is a problem in which the identity holds for all $\phi\in \Phi$:
+
+\begin{align}
+    X\CI_{P_\phi} Q | A
+\end{align}
+
+Alternatively, for all $q,q'\in \U{Q}$
+
+\begin{align}
+    \mu(X|A,Q=q)=\mu(X|A,Q=q')
+\end{align}
+
+\textbf{Conjecture:} These are equivalent.
+
+(``Markovian decision problem'' is already taken. This is rather similar to an MDP anyway...)
+
+\textbf{Conjecture:} Given a Markovian decision problem $\mathscr{D}$, in any minimal consistent graph $G$ over any $\mathbf{V}\supset\{X,A,Q\}$, $A$ and $X$ as having no common ancestors.
+
+Suppose we have some collection of weights $\mathbf{w}=\{w_q:q\in \U{Q}\}$ such that $w_q\in [0,1]$ and $\sum{q\in \U{Q}}w_q=1$. Then define $\mu_{\mathbf{w}}(X|A)=\sum_{q\in\underline{Q}} \mu(X|A,Q=q) w_q$.
+
+
+
+\begin{lemma}[Optimal decision kernels in Markovian CDPs]
+In a Markovian causal decision problem, for any weight collection $\mathbf{w}$, the decision kernel 
+\begin{align}
+    \phi_{M}: q\mapsto \argmin^*_{\nu\in \Delta(\underline{A})} u(\mu_{\mathbf{w}}(X|A)\nu(A)) 
+\end{align}
+is an optimal decision kernel.
+\end{lemma}
+
+\begin{proof}
+In a Markov CDP, for all $q,q'\in\U{Q}$
+\begin{align}
+    \mu(X|A,Q=q) &= \mu(X|A,Q=q')\\
+\end{align}
+
+Thus for any two weight collections $\mathbf{w},\mathbf{w}'$
+\begin{align}
+    \mu_{\mathbf{w}}(X|A) &= \mu_{\mathbf{w}'}(X|A)\\
+                          &:= \mu(X|A)
+\end{align}
+
+Fixing $q\in \underline{Q}$, we have for any $\phi\in \Phi$
+\begin{align}
+    P_\phi(X,A) = \mu(X|A)\phi(A|Q=q)
+\end{align}
+
+Furthermore, taking $\nu^* = \argmin^*_{\nu\in \Delta(\U{A})} u(\mu(X|A)\nu(A))$, we can note that
+\begin{align}
+    \mu(X|A)\nu^*(A) \leq \mu(X|A)\phi(A|Q=q)
+\end{align}
+
+But $q$ was arbitrary, so this is true for any $q\in \underline{Q}$.
+\end{proof}
+
+\begin{theorem}[Conditional and causal maps agree in Markovian CDP]
+In a Markovian CDP $\mathscr{D}$, for any $\mathcal{G}$ over any set of variables $\mathbf{V}\supset \{A,Q,X\}$ consistent with $\mathscr{D}$, the conditional and causal maps agree:
+\begin{align}
+     P_\phi(X|A)=P_{\mathcal{G}}(X|do(A))
+\end{align}
+\end{theorem}
+
+\begin{proof}
+
+For any $\phi\in \Phi$,
+\begin{align}
+    P_\phi(X|A)&=\sum_{q\in\U{Q}} \frac{\mu(X|A,Q=q) \phi(A|Q=q) P_{\U{Q}}(Q=q)}{\sum_{q'\in\U{Q}} \phi(A|Q=q')P_{\U{Q}}(Q=q')}\\
+               &=\mu(X|A) \frac{\sum_{q\in \U{Q}} \phi(A|Q=q) P(Q=q)}{\sum_{q'\in\U{Q}} \phi(A|Q=q')P_{\U{Q}}(Q=q')}\\
+               &=\mu(X|A)
+\end{align}
+
+The second line follows from $\mathscr{D}$ being Markovian.
+
+For all $a\in \U{A}$ and $\mathscr{G}$ consistent with $\mathscr{D}$, $P_{\phi_a}(X|A=a)=P_{\mathcal{G}}(X|do(A=a))$. But $P_{\phi_a}(X|A)=P_{\phi}(X|A)=P(X|A)$ for any $\phi\in \Phi$, $a\in\U{A}$.
+
+\end{proof}
+
+\subsection{Statistical Causal Decision Problems}
+
+A statistical causal decision problem (SCDP) is a causal decision problem in a setting where $Q=(D,S)$ represents ``data'' and ``state''. In general, we may wish to consider a sequence of CDPs, where a different decision kernel may be chosen at each step. For now we will stick with one-shot problems. 
+We do want to consider problems where the data generating process for $D$ is allowed to be different to the data generating process for the problem itself. To do this, we allow the decision kernel $\phi$ to be different during the data generating process, and assume that other aspects remain the same.
+
+\begin{definition}[Statistical Causal Decision Problem]
+A statistical causal decision problem is a causal decision problem $\langle \U{Q},\U{A},\U{X}, P_{\U{Q}}, \mu, \Phi \rangle$ where $\U{Q}=\U{D}\times \U{S}$, $P_{\U{Q}}(Q)=P_{\U{S}}(S)P_{\U{D}}(D)$ and $\mu:\U{S}\times\U{A}\to \U{X}$.
+
+The data $D\in (\U{A}\times\U{X})^{N}$ and is distributed according to
+
+\begin{align}
+    P_{\phi_D}(D) = \sum_{r\in \U{R}} \left[\mu(X|A,S=s)\phi_D(A|S=s)P(S=s)\right]^N
+\end{align}
+
+Where $\phi_D:\U{R}\to \Delta(\U{A})$.
+\end{definition}
+
+We are making a number of assumptions here that may not be desirable in a general definition:
+\begin{itemize}
+    \item $D\CI S$ (consider sequential problems)
+    \item $P_{\U{D}}(D)$ does not depend on $\phi$ (consider sequential problems)
+    \item $X$ does not depend on $D$ via $\mu$ (this one may be OK)
+\end{itemize}
+
+\begin{example}[Ideal RCT]
+
+In an ideal RCT, we have $D\in (\U{A}\times\U{X})^{N}$ under $\phi_D:\{1\}\to \Delta(\U{A})$.
+\begin{align}
+    P_{\phi_D}(X,A) &= P(X| A,1)\phi_D(A|1)\\
+    P_{\phi_D}(D) &= P_{\phi_D}(X,A)^N
+\end{align}
+
+The decision kernel depends only on $D$; $\phi:\U{D}\to \Delta(\U{A})$ and the problem is Markovian. That is, for any $\phi\in \Delta(\U{A})^{\U{D}}$
+\begin{align}
+    X\CI_{P_\phi} D | A
+\end{align}
+
+Thus we have
+\begin{align}
+    P_{\phi}(X,A) &= \sum_{s\in\U{S}} P(X|A,S=s)\phi(A|D)P(S=s)\\
+\end{align}
+
+Note that we have
+\begin{align}
+    P_\phi(X|A) = P_{\phi_D}(X|A)
+\end{align}
+
+Because the problem is Markovian, $P_\phi(X|A)$ is sufficient to find an optimal decision kernel.
+
+\end{example}
+
+\begin{example}[Naive Observational Causal Inference]
+
+A naive observational setting mirrors 
+
+\end{example}
+
+% Structural equation modelling is distinguished more by application than approach. Structural equation models are used extensively in econometrics and psychology, and are often deployed to different ends in these different fields. Technically, SEMs  have a close connection with graphical models. In particular, a set of acyclic structural equations with independent noises correspondence to a particular causal graphical model. Structural equation approaches often aim to infer parameters in systems of equations, but they may instead seek particular treatment effects \cite{heckman_structural_2005}.
+
+% \subsection{Decisions and Utility}
+
+% Causal inference is often concerned with determining favourable and unfavourable courses of action (treatments, policies etc.). This is usually by first identifying a \emph{causal effect}, and then connecting this to a course of action through pre-existing knowledge. Here the aim is to develop a theory of decision making which is concerned with determining the best actions at the outset, where the estimation of causal effects, if called for, plays an instrumental role. Focussing on the objective from the outset may allow us to realise two advantages over focussing on causal effects:
+
+% \begin{itemize}
+%     \item We can ensure estimation procedure is informative as to how to achieve the objective
+%     \item We may be able to avoid estimation procedures that tell us more than we need to know in order to achieve the objective
+% \end{itemize}
+
+% Von Neumann -- Morgenstern utility is a standard account of decision making under uncertainty. Given a set of mutually exclusive outcomes of interest $\U{X}$ and a set $P_i(X)$ of probability distributions over $\U{X}$ (traditionally referred to as ``lotteries''. If an agent's preferences over the lotteries $P_i$ accord with the Von Neumann -- Morgenstern axioms, there exists a utility function $u:X\to \mathbb{R}$ such that, if lottery $P_i$ is preferred to $P_j$ then
+% \begin{align}
+%     \mathbb{E}_{P_i}[u(X)] > \mathbb{E}_{P_i}[u(X)]
+% \end{align}
+
+% We might have cause to use an alternative to Von Neumann -- Morgenstern utility if we wish to express preferences that do not satisfy the VNM axioms, or if we wish to express preferences that do satisfy these axioms but are simpler to express in some other manner.
+
+% Unless otherwise stated, we will suppose that preferences can be expressed by a generalised utility $u:\Delta(\U{X})\to \mathbb{R}$, of which VNM utility is a special case.
+
+% \subsection{Outcome kernels}
+
+% Utility theory gives us an account of preferences between lotteries, but causal decision making deals with preferences between actions. A natural approach is, given some set of actions $\U{A}$ available to the agent, associate each action $a\in\U{A}$ with a probability distribution $P_a(X)$ and use the theory of utility to compare the distributions. We will call any map $A\to \Delta(X)$ an \emph{outcome kernel}.
+
+% There are two obvious candidates for the association between actions and probability distribuitons: the conditional distribution $P(X|A=a)$, which can be found from the joint distribution $P(X,A)$, and the causal kernel $P_{\mathcal{G}}(X|do(A=a))$, which can be found from a causal graph $\mathcal{G}$ over $\bf{V}$ and the distribution $P(\bf{V})$ where $X,A\in \bf{V}$. The former is similar to what is termed Savage decision theory \cite{savage_theory_1951}, and the latter can be considered a form of causal decision theory (CDT), though many variants of CDT exist\cite{lewis_causal_1981}. The potential outcomes school prefers to deal the treatment effect (recall $\text{TE} = X_2 - X_1$), which isn't as naturally cast as a map from actions to probability distributions. We will address treatment effects in more detail in the following section.
+
+% The conditional distribution has an immediate advantage: it requires only the joint probability distribution, while the causal kernel requires the joint probability distribution and a causal graph. The conditional distribution, unfortunately, is not satisfactory. The following example illustrates that actions, just like regular random variables, may exhibit spurious correlations.
+
+% \begin{example}[Visiting the doctor]
+% Geoff is considering visiting the doctor. His actions available are $A=0$ (avoid the doctor) and $A=1$ (see the doctor), and the outcomes he is interested in are $X=0$ (not sick) or $X=1$ (sick). His preferences can be expressed as
+% \begin{align}
+%     u(P(X)) = -\mathbb{E}[X]
+% \end{align}
+% i.e. he would prefer not to be sick.
+
+% From past visits to the doctor Geoff has deduced that $P(X=1|A=1)=0.8$ and $P(X=1|A=0)=0.2$.
+
+% Suppose that this correlation is due to Geoff being more likely to decide to see the doctor if he is feeling unwell, rather than Geoff having a very bad doctor.
+% \end{example}
+
+% In this case, the causal quantity $P_\mathcal{G}(X|do(A=a))$ appears to be the kind of thing we want. It asks: if Geoff's decision to visit the doctor were made by coinflips (disregarding how it is actually made), what would be the chance of illness given that he did or didn't visit? The counterfactual view also appears to ask a sensible question: holding Geoff's present condition constant, how will the outcomes of visiting or not visiting the doctor compare? The details given so far do not admit unique answers to either of these, but they appear to be the right sort of questions for Geoff to be asking.
+
+% An option for the conditional rule is to add additional context. If Geoff's decision is motivated by experiencing some symptoms $S$, it seems like $P(X|A,S)$ will probably give the appropriate answer with respect to seeing the doctor. It is not generally clear, however, what additional context should be conditioned on. A first brush might be to suggest conditioning on anything that might jointly influence both $A$ and $S$, but here we are invoking a theory of causality. However, it is inappropriate to condition on consequences of the action, so conditioning on \emph{everything} is not just intractable but also incorrect. One interpretation of counterfactuals is known as ``nearest-world semantics'' which, crudely, advises to condition on ``as much as possible''. Thus the possibility of including a context seems to lead us right back to some variety of causal theory.
+
+% Returning to the causal theory, however, raises the issue that accounts of causation are typically under-determined or rely on appeals to our intuitions about causality. If we have infinite data $D\sim P(X,A)$, our estimate of $P(X|A=a)$ will converge to a unique result, so we could propose that an ideal decision maker may use an infinite amount of data to estimate $P(X|A=a)$. When it comes to causal graphs, while data may constrain the set of compatible causal graphs, there are in general a multitude of graphs compatible with any infinite dataset, and these graphs typically yield a multitude of causal kernels (this remains true if we assume the stronger condition of faithfulness). In fact, there is always a graph $\mathcal{G}$ compatible with the data which will yield $P_{\mathcal{G}}(X|do(A=a))=P(X|A=a)$, so the conditional distribution could be seen as a causal kernel with respect to a particular graph. 
+
+% Our aim here is to give a reasonable account of how a decision maker ideally ought to make decisions. Endorsing causal kernels leaves us with the option of either considering decisions rational with respect to some graph $\mathcal{G}$ while leaving the graph unspecified, or endorsing what is usually an informal procedure for determining the correct graph.
+
+% This dilemma is illustrated by the case of Newcomb's problem. Newcomb's problem is a famous decision theory dilemma that has no consensus resolution either on the question of which action should be taken or what theory should motivate these actions\cite{noauthor_preliminary_nodate}. A variant of the problem is presented below.
+
+% \begin{example}[Newcomb's problem]
+% Suppose we have an decision maker (``DM'') confronted by a machine (``PD'') capable of accurately predicting the DM's behaviour. That is, given a policy $Q$ decided upon by DM, PD has predicted a set of possible values $C$ such that $P(Q\in C)=1-1e-10$. PD presents DM with two boxes, and offers the choice to take either the first box ($A=1$) or both boxes ($A=2$). DM can choose a policy $Q\in [0,1]$ such that $P(A=2|Q=q)=q$. Earlier, PD has made its prediction $C$ and if it believed DM would choose to take just the first box ($C=\{0\}$) then it has filled the first box with \$1 000 000 and the second with \$1. If it believed DM had any chance of taking both boxes ($C=(0,1]$) then it will have left the first box empty but kept \$1 in the second box.
+
+% Suppose both $P(Q=0)\gg 1e-10$ and $P(Q>0)\gg 1e-10$.
+
+% Given $A$ and $C$, the payout $X$ takes the following values with probability 1:
+% \begin{table}[h]
+%     \centering
+%     \begin{tabular}{c|c|c}
+%             & C=\{0\} & C=(0,1]  \\
+%             \hline
+%         A=1 & \$1e6  & \$0 \\
+%         A=2 & \$1e6+1& \$1
+%     \end{tabular}
+%     \caption{Newcomb's problem payoff $X$}
+%     \label{tab:newcombs_problem}
+% \end{table}
+
+% The agent wants to make a choice maximising $\mathbb{E}[X]$. We can straightforwardly show that $\mathbb{E}[X|Q>0]\leq 1 + 1e-4$ and $\mathbb{E}[X|Q=0]= 1e6-1e-4$.
+
+% A natural language argument for each option follows:
+% \begin{enumerate}
+%     \item \textbf{One box gets more money:} If the agent chooses $Q>0$, the predictor will most likely have predicted it will do this, and so the agent takes away at best \$1. If the agent chooses $Q=0$, the predictor will most likely have predicted this, and so the agent takes away \$1 000 000.
+%     \item \textbf{Two box is the dominant strategy:} If the predictor has predicted the agent will choose $Q=0$, it will have filled both boxes, and the agent would be better off taking both. Also, if the predictor has predicted the agent will choose $Q=1$, it will have filled only the second box, and the agent will be better off taking both.
+% \end{enumerate}
+% \end{example}
+
+% Mapping policies to outcomes via the conditional distribution $P(X|Q)$ will clearly recommend taking one box. In order to compute the causal kernel, we require a graph. The graph $\mathcal{G}_1$ below best matches my intuition about what might be going on:
+% \begin{center}
+%     \begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 2cm ,on grid ,
+%     semithick ,
+%     variable/.style ={ circle ,top color =white , 
+%     draw , text=blue , minimum width =1 cm},
+%     kernel/.style={rectangle,draw}
+%     ]
+%     \node (U) {$U$};
+%     \node (Q) [below right = of U] {$Q$};
+%     \node (A) [right = of Q] {$A$};
+%     \node (C) [above right = of U] {$C$};
+%     \node (X) [above right = of A] {$X$};
+%     \draw (Q) -- (A);
+%     \draw (A) -- (X);
+%     \draw (C) -- (X);
+%     \draw (U) -- (Q);
+%     \draw (U) -- (C);
+%     \end{tikzpicture}
+% \end{center}
+
+% That is, there is some unmentioned state that determines both the policy $Q$ and enables the accurate prediction $C$. The other causal relationships can be directly inferred from the description of the problem. Here, $P_\mathcal{G_1}(X|do(Q=q))=\sum_{c\in\U{C}} P(X|Q=q,C=c)P(C=c)$, and thus with a little work we can show that $\mathbb{E}_{\mathcal{G}_1}[X|do(Q=1)]=1+\mathbb{E}_{\mathcal{G}_1}[X|do(Q=0)]$. Under $\mathcal{G}_1$, then, the causal kernel recommends to take two boxes.
+
+% The following graph $\mathcal{G}_2$ does \emph{not} match my intuition about what could be going on. In particular, it draws a causal arrow from the policy $Q$ to the prediction $C$, even though we hold that $C$ was realised earlier in time than $Q$. Nonetheless, it is compatible with, and even faithful to, the distribution defined in the original problem.
+
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 2cm ,on grid ,
+% semithick ,
+% variable/.style ={ circle ,top color =white , 
+% draw , text=blue , minimum width =1 cm},
+% kernel/.style={rectangle,draw}
+% ]
+% \node (Q) {$Q$};
+% \node (A) [right = of Q] {$A$};
+% \node (C) [right = of A] {$C$};
+% \node (X) [right = of C] {$X$};
+% \draw (Q) -- (A);
+% \draw (A) -- (C);
+% \draw (C) -- (X);
+
+% \draw (A) to [bend right] (X);
+% \end{tikzpicture}
+% \end{center}
+
+% In this case, $P_\mathcal{G_2}(X|do(Q=q))=P(X|Q=q)$ and so the causal kernel with $\mathcal{G}_2$ recommends taking one box.
+
+% One approach that might be suggested for determining what is the correct causal graph is to randomise the action $A$ and hold that $P(X|do(A=a))=P(X|A=a)$ if $A$ is chosen randomly. The role of the policy $Q$ is to point out that this strategy does not appear to help DM choose between $\mathcal{G}_1$ and $\mathcal{G}_2$, as the act of randomising itself is correlated with the outcome.
+
+% A similar argument has been made that the counterfactual view recommends two-boxing under natural interpretations, but can also recommend one-boxing under unnatural interpretations\cite{horgan_counterfactuals_1981}.
+
+% If we are committed to using causal kernels to map actions to outcome distributions, we can consider 2-boxing the $\mathcal{G}_1$-optimal strategy and 1-boxing the $\mathcal{G}_2$-optimal strategy. We could then consider some options for what could be done next
+
+% \begin{itemize}
+%     \item Decline to offer an opinion about whether $\mathcal{G}_1$ or $\mathcal{G}_2$ is correct
+%     \item Hold that the intuition that recommends $\mathcal{G}_1$ is correct
+%     \item Hold that the accurate prediction PD is unusual enough that it may render our intutions unreliable, while the ``more money'' principle recommends $\mathcal{G}_2$
+%     \item ...
+% \end{itemize}
+
+% This illustrates the dilemma outlined above: we are in a situation where we either give parallel accounts of the correct decision indexed by the graphs $\mathcal{G}_1$ and $\mathcal{G}_2$ or we endorse one graph over the other on informal grounds.
+
+% Despite the issues with both causal kernels and conditional distributions, in practice both of them seem to be perfectly satisfactory. In a standard $N$-armed bandit problem, if we identify $A\in\{a_1,..,a_N\}$ as pulls on each lever and hold that $X$ depends only on $A$, then the kernel $a_i\mapsto P(X|A=a_i)$ appears to be perfectly appropriate for describing the outcomes of actions. Furthermore, given the assumption about the dependence of $X$ we also have $P(X_k)=P(X|do(A=a_k))$. The same appears to be true in a genomics problem if we identify possible actions as genome edits, or in policy evaluation task if we identify possible actions as enacting a policy or not.
+
+% Addressing these ordinary problems is the highest priority, as they offer simple outcome kernels and are probably the most numerous problems in causal inference. ``Visiting the doctor'', where actions are spuriously correlated with outcomes but there appears to be a straightforward way to deal with the confounding, is less common but is not excessively exotic. Newcomb's problem is very exotic, and offering an adequate solution to problems like this is not a priority here.
+
+% A tentative characterisation of problems of the first and second type - termed ``ordinary decision problem'' and ``contingent decision problem'' respectively - is presented. It's not easy to evaluate the assumptions here, but I think it is interesting that it's possible to characterise these problems without reference to counterfactual variables or true causal graphs.
+
+% \begin{definition}[Ordinary decision problem]
+% An ordinary decision problem posits a decision maker that implements a Markov kernel $\phi:Q\to \Delta(A)$. The set $Q$ is the set of available policies and $A$ is the set of available actions. We have a priori access to $\phi$. There are a set of outcomes of interest $X$ and a cost $c:\Delta(X)\to\mathbb{R}$. We also posit a (potentially very large) set of variables $\bf{V}\supset\{X,A,Q\}$, which apart from $X$, $Q$ and $A$ may be unmeasured.
+
+% We assume that finding any $q\in\argmin_{q'} c(P(X|Q=q'))$ is the aim of the problem. Any such policy will be called an optimal policy.
+
+% \textbf{Policy distribution is positive definite:} For all $q\in \U{Q}$, $P(Q=q)>0$ (this can probably be relaxed)
+
+% \textbf{Policy ignorability:} Given outcomes of interest $X$, we require that $\phi(A|Q)$ and $P(X|A)$ is sufficient to determine $P(X|Q)$ for any $Q$:
+% \begin{align}
+%     &P(X|Q) = P(X|A)\phi(A|Q) \nonumber\\
+%     &\Leftrightarrow \nonumber \\
+%     &X\CI Q | A \label{eq:policy_ignorability}
+% \end{align}
+
+% \textbf{Policy convexity:} For any two policies $q_1,q_2\in\U{Q}$ and $\alpha\in \{0,1\}$, there exists a policy $q^\alpha_{12}\in \U{Q}$ such that  $\alpha \phi(a|q_1) + \beta \phi(a|q_2) = \phi(a|q^\alpha_{12})$ (this is also stronger than necessary)
+
+% % \textbf{Nondegenerate policies:} For any two policies $q,q'\in \U{Q}$, $P(A|Q=q)\neq P(A|Q=q')\implies q\neq q'$.
+
+% \textbf{Ideal decision maker:} For every set of variables $\mathbf{U}\subset \mathbf{V}$, there exists a graph $\mathcal{G}$ with $\text{Pa}_{\mathcal{G}}(A)=\{Q\}$ and $\text{Ch}_{\mathcal{G}}(Q)=\{A\}$ to which $P(\mathbf{U})$ is Markovian.
+
+% \end{definition}
+
+% The positive definiteness of the policy distribution allows for $P(X|Q=q)$ to be defined for all $q\in\U{Q}$. On the other hand, 
+
+% A simple version of the doctor visit is ruled out by these conditions. Suppose that the possible states of illness in the future are $\U{X}\in \{0,1\}$ and $X$ depends (in $\mathcal{G}$) only on the current unmeasured state of illness $S\in \bf{V}$ with $\U{S}\in \{0,1\}$ such that $P(X=x|S=s)=\delta_{xs}$. Also assume that $S$ does not depend on $A$ (we are in a world where doctors don't help, but they don't do any harm either), and the policy $Q$ does not depend on $X$. By these assumptions the following conditional independences hold:
+% \begin{align}
+% X&\CI Q, A|S\\
+% X&\CI Q|S\\
+% A&\CI S|Q 
+% \end{align}
+% The first two follow from $\text{Pa}_\mathcal{G}(X)=\{S\}$ and $Q,A\in \text{ND}_\mathcal{G}(X)$, while the third follows from $\text{Pa}_\mathcal{G}(A)=Q$ and $S\in \text{ND}_\mathcal{G}(A)$.
+
+% Suppose that in spite of the lack of causal effect of $A$, we have $X\not\CI A$ (if this were not true, there would be no problem - $P(X|A)$ would tell us exactly what we wanted to know). Consider the policy $q_\gamma\in\U{Q}$ with $P(A=1|Q=q_\gamma) = \gamma$ and $0<\gamma<1$, and assume that policy ignorability holds. Then
+
+% \begin{align}
+%     P(X|A=a)&=P(X|A=a,Q=q_\gamma)\\
+%             &= \sum_{s} P(X|S=s,A=a,Q=q_\gamma) P(S=s|A=a,Q=q_\gamma) \\
+%             &= \sum_{s} P(X|S=s,Q=q_\gamma) P(S=s|Q=q_\gamma) \\
+%             &= P(X|Q=q_\gamma)
+% \end{align}
+
+% Now, we either have $P(X|Q=q_\gamma)=P(X)$, which would contradict $X\not \CI A$, or we have some $q_\delta\neq q_\gamma$ such that $P(X|Q=q_\delta)\neq P(X|Q=q_\gamma)$. Without loss of generality, suppose $P(A=1|Q=q_\delta)>0$. Then $P(X|Q=q_\delta)=P(X|A=1,Q=q_\delta)\neq P(X|A=1,Q=q_\gamma)$, violating policy ignorability. $\square$
+
+% \textbf{Conjecture:} A more general version of the doctor visit in which the doctor has some causal impact on $X$ is also ruled out (unless this matches $P(X|A=a)$).
+
+% \textbf{Conjecture:} Newcomb's problem is ruled out by a similar argument. 
+
+% \textbf{Conjecture:} N-armed bandit problems are not ruled out.
+
+% An argument in favour of these conditions apart their treatment of the example problems is that they imply a ``natural'' class of causal graphs $\U{\mathcal{G}}$, and if we hold that $\phi$ is positive definite then $P(X|Q=q)=P_{\mathcal{G}}(X|do(Q=q))$ for all $\mathcal{G}\in\U{\mathcal{G}}$.
+
+
+
+% \textbf{Conjecture:} The positive definiteness of $\phi$ could be replaced by a continuity assumption. In particular, defining a topology on $\U{Q}$ via the convexity of $q\mapsto \phi(a|q)$, the condition $q\mapsto P(X|do(Q=q))$ be continuous with respect to this topology and a topology on $\Delta(\U{X})$ given by any divergence is sufficient for the above result.
+
+% Unlike Newcomb's problem, the problem of the doctor visit is not particuarly exotic, and it is reasonable to want a theory that can deal with problems of this type. It's possible to extend this account in order to allow this type of problem by introducing a variable of observables $O$ and using contingent policies $\phi:\U{O}\times \U{Q}\to \delta(\U{A})$.
+
+% \begin{definition}[Contingent decision problem]
+% A contingent decision problem posits a decision maker that implements a Markov kernel $\phi:\U{Q}\times \U{O}\to \Delta(\U{A})$. The set $\U{Q}$ is the set of available policies, $\U{O}$ is the set of possible observations and $\U{A}$ is the set of available actions. We have a priori access to $\phi$. There are a set of outcomes of interest $X$ and a cost $c:\Delta(\U{X}\times \U{A})\to\mathbb{R}$. There is a (potentially very large) set of variables $\mathbf{V}\supset\{A,Q,O,X\}$.
+
+% We assume that finding any $q\in\argmin_{q'} c(P(X|Q=q'))$ is the aim of the problem. Any such policy will be called an optimal policy.
+
+% \textbf{Contingent policy ignorability:} Given outcomes of interest $X$, we require that $\phi(A|Q)$, $P(X|A,O)$ and $P(O)$ is sufficient to determine $P(X|Q=q)$ for any $q\in\U{Q}$:
+% \begin{align}
+%     &P(X|Q) = P(X|O,A)\phi(A|Q) P(O) \nonumber\\
+%     &\Leftrightarrow \nonumber \\
+%     &X\CI Q | A, O\qquad \And O\CI Q \label{eq:contingent_policy_screening}
+% \end{align}
+
+% \textbf{Policy convexity:} For any two policies $q_1,q_2\in\U{Q}$ and $\alpha\in \{0,1\}$, there exists a policy $q^\alpha_{12}\in \U{Q}$ such that  $\alpha \phi(a|o,q_1) + \beta \phi(a|o,q_2) = \phi(a|o,q^\alpha_{12})$ for all $a,o\in\U{A}\times\U{O}$. (n.b. this may be stronger than necessary)
+
+% % \textbf{Nondegenerate policies:} For any two policies $q,q'\in \U{Q}$, $P(A|Q=q,O=o)\neq P(A|Q=q')\implies q\neq q'$.
+
+% \textbf{Ideal decision maker:} For every $\mathbf{U}\subset\mathbf{V}$, there exists a directed acyclic graph $\mathcal{G}$ such that $\text{Pa}_{\mathcal{G}}(A)=\{Q,O\}$ and $\text{Ch}_{\mathcal{G}}(Q)=\{A\}$ and $P(\mathbf{U})$ is Markov with respect to $\mathcal{G}$.
+
+% \end{definition}
+
+% As a final point of clarification, in an ordinary decision problem, given a priori access to $\phi(a|q)$, we only need to estimate $P(X|A)$. The policy need not enter explicitly into any estimation steps.
+
+\subsection{Treatment Effects}
+
+Treatment effects dealt with by the potential outcomes literature do have a natural connection with the comparison of lotteries to yield a decision rule. However, the decision rule suggested by the treatment effects can usually be mapped to a utility and outcome kernel that maintains the same set of preferences over actions.
+
+For this section, we will accept the claim of the causal graphical model school that $P(X_{T=i})=P(X|do(T=i))$.
+
+The treatment effect itself is a counterfactual quantity. Ordinary random variables cannot be predicted for the purposes of making decisions, but the treatment effect cannot even be observed after the fact. It is typically defined for a case where there is a binary treatment $T\in\{0,1\}$ as
+\begin{align}
+    \text{TE} = X_{T=1} - X_{T=0}
+\end{align}
+
+The superscript $X^T$ here is to indicate that this is the counterfactual quantity 
+
+It is possible to formulate a decision problem as a comparison of lotteries over \emph{treatment effects}. Define the $t$-indexed treatment effect as
+
+\begin{align}
+    \text{TE}_{t} = X_{T=t} - X_{T=0}
+\end{align}
+
+We could then consider decision problems given by utilities $u:\Delta(\text{TE})\to \mathbb{R}$ and the outcome kernel $a\mapsto \text{TE}_a$. This permits some unusual preferences to be expressed. For example, defining a utility $u:\Delta(\text{TE})\mapsto \mathbb{E}[\text{TE}^2]$ and assigning preferences via expected utility we have
+
+\begin{align}
+    a^* &= \argmax_a \mathbb{E}[\text{TE}_a^2]\\
+        &= \argmax_a \mathbb{E}[X_a^2]+\mathbb{E}[X_0]^2 - \mathbb{E}[X_a X_0] - \text{Cov}[X_a X_0]
+\end{align}
+
+The last term on the right hand side - $\text{Cov}[X_a X_0]$ - is unobservable by definition whenever $a\neq 0$. I have not seen any actual examples of effects of interest that depended on unobservable quantities like this. In the following sections we will address treatment effects that are actually used.
+
+\subsubsection{Average Treatment Effect}
+
+The simplest treatment effect sought in practice is the average treatment effect:
+\begin{align}
+    \text{ATE} &= \mathbb{E}[\text{TE}]\\
+               &= \mathbb{E}[X_{T=1}] - \mathbb{E}[X_{T=0}]
+\end{align}
+
+I propose that the usual decision rule implicit in this effect is: 
+
+\textbf{$\text{R}_{\text{ATE}}$}: Choose $T=1$ if $\text{ATE}>k$, otherwise choose $T=0$ for some threshold $k$ (for example, a significance threshold).
+
+Under some conditions, this decision rule can be matched by an ordinary decision problem:
+\begin{itemize}
+    \item Identify the action $A$ with the treatment $T$, 
+    \item Posit a policy $Q$ over actions via the kernel $\phi$ and a universe $\mathbf{V}$ of variables
+    \item Define the utility $u_A: P(T,X)\mapsto \mathbb{E}[X]-k\mathbb{E}[T]$ 
+\end{itemize}
+
+\textbf{Conjecture:} If $\langle X,Q,A,\mathbf{V},P(\mathbf{V}),u_A\rangle$ is an ordinary decision problem, then the actions recommended by $\argmin_t u_I(P(X,T=t))$ will match the actions recommended by $\text{R}_{\text{ATE}}$.
+
+\textbf{Proof sketch:} If the problem is an ordinary decision problem, $P(X_{T=t})=P(X|T=t)$. Also, $\text{ATE}>k$ iff $\mathbb{E}[X_1] > \mathbb{E}[X_0]+k$. The result follows.
+
+\subsubsection{Intention To Treat}
+
+Intention to treat (ITT) analysis is relevant in experiments with imperfect compliance. Suppose we have an outcome $X\in\{0,1\}$, a treatment $T\in\{0,1\}$ and an assignment-to-treat $Z\in\{0,1\}$. $0<P(T=1|Z=1)<1$ and $0=P(T=1|Z=0)$. Introduce the additional counterfactual variable $X_{Z=z}$. The intention to treat estimate is:
+\begin{align}
+    \text{ITT} &= \mathbb{E}[X_{Z=1}] - \mathbb{E}[X_{Z=0}]
+\end{align}
+
+Note that in an imperfect experiment, if we postulate that the action set $A$ should be identified with the treatment $T$ and therefore the policy $Q$ is identified with the assignment $Z$ (or a mixture of assignments), the resulting problem will not satisfy the criteria for an ordinary decision problem. In particular, we cannot be confident that there do not exist unmeasured variables $U$ such that $U\not\CI Z|A$ and $A\not\CI U|Z$, which violates the assumption of an ideal decision maker. In causal language, we cannot be sure that the treatment $T$ doesn't depend on some unmeasured variable $U$ in addition to $Z$.
+
+The intention to treat estimate corresponds to the following ordinary decision problem:
+
+\begin{itemize}
+    \item Identify the action $A$ with the assignment $Z$, 
+    \item Posit a policy $Q$ over actions via the kernel $\phi$ and a universe $\mathbf{V}$ of variables
+    \item Define the utility $u_I: P(Z,X)\mapsto \mathbb{E}[X]-k\mathbb{E}[Z]$ 
+\end{itemize}
+
+\textbf{Conjecture:} If $\langle X,Q,A,\mathbf{V},P(\mathbf{V}),u_A\rangle$ is an ordinary decision problem, then the actions recommended by $\argmin_z u_I(P(X,Z=z))$ will match the actions recommended by $\text{R}_{\text{ITT}}$.
+
+\textbf{Proof sketch:} As with ATE, but replace $T$ with $Z$.
+
+\begin{remark}
+The utility $u_A$ is quite natural - the active treatment usually has a cost (for example, a drug costs money and may have side effects), but this might be worthwhile if its effect is good enough. $u_I$ may not be as natural in some cases - in a drug trial, someone who is randomly assigned to a treatment arm but declines to take the drug has not incurred the costs mentioned above.
+\end{remark}
+
+% \begin{remark}
+% Policy ignorability may fail in this type of experiment - if the assignment of the $i$th sample affects the outcome of the $j$th sample, then we will not have $X\CI Q|Z$. This particular type of failure is noted in the potential outcomes literature, and the assumption that it does not occur is called the stable unit treatment value assumption (SUTVA)\cite{rubin_causal_2005}.
+% \end{remark}
+
+\subsubsection{Effect of treatment on the treated}
+
+Again, we deal with imperfect experiments. Suppose we have an outcome $X\in\{0,1\}$, a treatment $T\in\{0,1\}$ and an assignment-to-treat $Z\in\{0,1\}$. $0<P(T=1|Z=1)<1$ and $0=P(T=1|Z=0)$. We have counterfactual variables $X^T_t$ representing the counterfactual outcomes.
+
+The effect of treatment on the treated is:
+
+\begin{align}
+    \text{ETT} &= \mathbb{E}[\text{TE}|T=1] \\
+               &= \mathbb{E}[X_{T_1}|T=1] - \mathbb{E}[X_{T=0}|T=1]
+\end{align}
+
+
+Unlike the previous two examples, there isn't a straightforward correspondence between the decision rule implied by the ETT and an ordinary decision problem. Identifying actions $A$ with treatments $T$ does not produce an ordinary decision problem as discussed above. The counterfactual quantity $\mathbb{E}[X_{T=0}|T=1]$ does not have a representation in the ordinary decision problem.
+
+Suppose the decision rule that goes with ETT is:
+
+\textbf{$\text{R}_{\text{ETT}}$}: Choose $Z=1$ if $ETT>k$ for some threshold $k$, otherwise choose $Z=0$.
+
+If we assume $\mathbb{E}[X_{T=t}|T=t']=\mathbb{E}[X|T=t]$ and $P(T=1|Z=1)>P(T=1|Z=0)$ then the rule \textbf{$\text{R}_{\text{ETT}}$} is matched by an ordinary decision problem with the utility $u_E:P(X,T)\mapsto \mathbb{E}[X]-k\mathbb{E}[T]$.
+
+\textbf{Proof sketch:} We have
+\begin{align}
+    u_E(P(X,T|Z=1)) &= \mathbb{E}[X|T=1]P(T=1|Z=1) + \mathbb{E}[X|T=0]P(T=0|Z=0) - kP(T=1|Z=1)\\
+    &= \mathbb{E}[X|T=0]P(T=0|Z=1) + P(T=1|Z=1)(\mathbb{E}[X|T=1] - k)\\
+    u_E(P(X,T|Z=0)) &= \mathbb{E}[X|T=0]P(T=0|Z=0) + P(T=1|Z=0)(\mathbb{E}[X|T=1]-k)
+\end{align}
+
+$\text{ETT}>k\implies \mathbb{E}[X|T=1]-k>\mathbb{E}[X|T=0]$. If $\mathbb{E}[X|T=1]-k>\mathbb{E}[X|T=0]$ then $u_E(P(X,T|Z=1))>u_E(P(X,T|Z=0))$, otherwise the reverse.
+
+This raises the question: is ETT implied by the utility $u_E$ 
+
+
+ETT may be invoked where the treatment assignment $Z$ cannot reasonably be identified as the action set. For example, an evaluation of a training program might add a screen to randomly exclude applicants, while the actual decision at hand is whether or not to continue to fund the training program. Adding such a screening step may cause the participants in the evaluation to differ from participants in the program without that step \cite{heckman_randomization_1991}. This introduces a separate issue. Suppose we identify the action set with $A\in \{0,1,2\}$ where $A=0$ corresponds to $Z=0$, $A=1$ corresponds to $Z=1$ and $A=2$ corresponds to some other incentive to take the treatment. Then, in general, $P(T,X|A=2)\neq P(X|A=1,T)P(T|A=2)$.
+
+% Given a set of decision-relevant random variables $\mathbf{X}$, the causal literature gives us several choices of outcome: just $X$, the set of treatment effects $\{X_a - X_{a'}|a,a'\in A\}$ or the full set of potential outcomes $\{X_a|a\in A\}$.
+
+% Note that while $P(X|do(A=a))=P(X_a)$, using the treatment effect it is possible to define quantities that depend on the distribution of $X_a-X_{a'}$ that cannot be defined via the separate distributions of $X_a$ and $X_{a'}$. In practice, however, all treatment effects used can be defined in terms of the separate distributions. 
+
+% We can make background observations $O$ before an action is chosen, and $V=I\cup X\cup O$. A standard objective for this setting is the expected utility: if we have some $U:X\to \mathbb{R}$ and some map $\mathcal{M}:I\to \Delta(X)$ then we aim to choose some $i^*\in I$ maximising $\mathbb{E}_{\mathcal{M}(i)}[U(X)]$.
+
+% We will generalise this on the \emph{regret}, which measures the difference in utility derived from the optimal action and that derived from the chosen action \cite{savage_theory_1951}.
+
+% \begin{definition}[Simple Regret]\label{def:regret} Given a set of events $V=I\cup S\cup X$ with actions $I$, background observations $O$ and outcome $X$, a VNM utility function $\mathcal{U}:\delta(V)\to \mathbb{R}$ and a state-action-outcome map $\mathcal{M}:I\times O\to \Delta (V)$, the $\mathcal{M}$-regret $\rho_{\mathcal{M},\mathcal{U}}:I\to\mathbb{R}$ is defined as:
+% \begin{align}
+%     \rho_{\mathcal{M},\mathcal{U}}(i) = \mathcal{U}(\mathcal{M}(i^*)) - \mathcal{U}(\mathcal{M}(i))
+% \end{align}
+% \end{definition}
+
+% \begin{remark} It seems reasonable to think that there might be times when we want to functions of $\mathcal{U}(\mathcal{F}(i))$ and $\mathcal{U}(\mathcal{F}(i^*))$ besides just the difference.
+% \end{remark}
+
+% While this definition might seem straightforward, it is nontrivial to integrate it with existing notions of ``causal effect''.
+
+% \subsubsection{Regret and Counterfactual Effects}
+
+% The counterfactual literature defines a large number of causal effects which are all based on the fundamental idea of ``treatment effect'':
+% \begin{align}
+%     \text{TE}(i,i') = X_i - X_{i'}
+% \end{align}
+
+% In practice, the most common treatment effect considered is the average treatment effect:
+
+% \begin{align}
+%     \text{ATE}(i,i') = \mathbb{E}[\text{TE}(i,i')]
+% \end{align}
+
+
+
+% It is possible to get a regret from and ATE and vise-versa. Define $\mathcal{M}_{\text{CF}}:(i,o)\mapsto P(X_i = x,O=o)P(I=i)$ and $\mathcal{U}_{\text{EXP}}:P(X=x,I=i,O=o)\mapsto \mathbb{E}(X)$. Then
+
+% \begin{align}
+%     \text{ATE}(i,i') &= \rho_{\mathcal{M}_{\text{CF}},\mathcal{U}_{\text{EXP}}}(i) - \rho_{\mathcal{M}_{\text{CF}},\mathcal{U}_{\text{EXP}}}(i')\\
+%     \rho_{\mathcal{M}_{\text{CF}},\mathcal{U}_{\text{EXP}}}(i) &= \text{ATE}(i^*,i)\\
+%                                                               &= \argmax_{i'}\text{ATE}(i',i)
+% \end{align}
+
+ 
+% Because the counterfactual account defines multiple outcomes for sample - the observed outcome and one or more counterfactual outcomes - it is possible to define quantities that cannot be captured by Definition \ref{def:regret}. For example, we can define
+
+% \begin{align}
+%     ETE(i,i') = \alpha\mathbb{E}(\text{TE}(i',i)) + \beta(\text{Var}(\text{TE}(i',i))) \label{eq:cf_var}
+% \end{align}
+
+% Such an effect could be motivated by a certain form of egalitarianism - the benefits of a treatment should be spread around as evenly as possible. However, (\textbf{conjecture}) the same set of observations can be consistent with any value $\text{Var}(\text{TE}(i',i))$ from $0$ to $\text{Var}(X_{i'})+\text{Var}(X_{i})$ provided that observations of $X_i$ and $X_{i'}$ are mutually exclusive for $i\neq i'$. Thus the value of this particular effect is inherently unknowable.
+
+% In practice, if more detail is sought over the average treatment effect, the individual treatment effect is used \cite{shalit_estimating_2016}.
+
+% \begin{align}
+%     \text{ITE}(i,i',o) = \mathbb{E}[\text{TE}(i,i')|O=o]
+% \end{align}
+  
+% The ITE can be defined analogously to the ATE in terms of a regret $\rho_{\mathcal{M}_{\text{CF}},\mathcal{U}^o_{\text{EXP}}}$ where $\mathcal{U}^o_{\text{EXP}}:P(X,I,O)\mapsto \mathbb{E}[X|O=o]$.
+
+% As a final example
+
+
+
+% A statistical causal decision problem is static if
+% \begin{align}
+%     \Phi_{<N} = \{(a_{0:j},x_{0:j})\mapsto \Delta(\U{A}):\forall (a_{0:j},x_{0:j})\in (\U{A}\times \U{X})^j, \forall j\in \{0,..,N\} \}
+% \end{align}
+% I.e. if the sequence of decision kernels $\Phi_{<N}$ maps to a constant element of $\Delta(\U{A})$.
+
+\section{Dangling Theorem}
+
+This proof was used before the switch to statistical causal decision problems. It still seems like it might be interesting, but it's not presently obvious how.
+
+\begin{theorem}[In a Markovian CDP, $P(X|Q)=P(X|do(Q))$ ]
+Given a Markovian causal decision problem $\langle u, Q, A, X\rangle$, define the universe $\mathbf{V}\supset\{Q,A,X\}$ and the class of DAGs on $\mathbf{V}$, $\U{\mathcal{G}}(\mathbf{V})=\{\mathcal{G}:\PA{\mathcal{G}}{A}=\{Q\}\And \CH{\mathcal{G}}{Q}=\{A\}\}$. If we suppose the true causal graph $\mathcal{G}^*\in \U{\mathcal{G}}$, then $P(X|A)=P(X|do(A))$.
+\end{theorem}
+
+
+\begin{proof}
+Choose some $\phi\in \Delta(\U{A})^{\U{Q}}$ such that $\phi(a;q)>0$ for all $(a,q)\in\U{A}\times\U{Q}$. Then
+
+\begin{align}
+    P(X|A=a,Q=q) &= \frac{\sum_{\PA{G}{\{X,Q\}}} P(X|\PA{G}{X}) P(Q|\PA{G}{Q}) \phi(a|q) P(\PA{G}{\{X,Q\}}}{\sum_{\PA{G}{Q}}P(Q|\PA{G}{Q})\phi(a|q) P(\PA{G}{Q})}\\
+                 &= \frac{\sum_{\PA{G}{\{X,Q\}}} P(X|\PA{G}{X}) P(Q|\PA{G}{Q}) P(\PA{G}{\{X,Q\}}}{\sum_{\PA{G}{Q}}P(Q|\PA{G}{Q}) P(\PA{G}{Q})}\\
+\end{align}
+
+Because $Q\in \ND{G}{X}$, 
+\begin{align}
+    P(X|\PA{G}{X},\Insert(Q=q))=P(X|\PA{G}{X}) \label{eq:x_local_markov}
+\end{align}
+Due to the fact that $\mathcal{G}$ is acyclic, 
+\begin{align}
+    P(Q|\PA{G}{Q},\Insert(Q=q))=P(Q|\PA{G}{Q}) \label{eq:q_local_markov}
+\end{align}
+Finally, by definition of $P$ and $\phi$,
+\begin{align}
+    P(A|Q=q,\Insert(Q=q'))=\phi(a|q') \label{eq:phi_definition}
+\end{align}
+
+Applying the definition of the conditional distribution and combining Eq. \ref{eq:x_local_markov}, \ref{eq:q_local_markov} and \ref{eq:phi_definition} we have
+\begin{align}
+   P(X|A=a,Q=q,\Insert(Q=q')) &= \frac{\sum_{\PA{G}{\{X,Q\}}} P(X|\PA{G}{X}) P(Q|\PA{G}{Q}) \phi(a|q') P(\PA{G}{\{X,Q\}}}{\sum_{\PA{G}{Q}}P(Q|\PA{G}{Q})\phi(a|q') P(\PA{G}{Q})}\\ 
+                         &= P(X|A=a, Q=q) \label{eq:condition_causal_q}
+\end{align}
+
+Applying policy ignorability to Eq. \ref{eq:condition_causal_q}, we have for all $a\in\U{A}$ and $q,q'\in\U{Q}$:
+\begin{align}
+    P(X|A=a,Q=q,do(Q=q')) &= P(X|A=a)
+\end{align}
+Multiply both sides by $P(Q=q|A=a,do(Q=q'))$ and sum over $q$:
+\begin{align}
+    \sum_{q\in\U{Q}} P(X|A=a,Q=q,do(Q=q'))P(Q=q|A=a,do(Q=q')) &= \sum_{q\in \U{Q}} P(X|A=a)P(Q=q|A=a,do(Q=q'))\\
+    P(X|A=a,do(Q=q')) &= P(X|A=a)
+\end{align}
+
+Finally,
+\begin{align}
+    P(X|do(Q=q)) &= \sum_{a\in\U{A}} P(X|A=a,do(Q=q)) \phi(a|q) \\
+                 &= \sum_{a\in\U{A}} P(X|A=a)\phi(a|q) \\
+                 &= P(X|Q=q)
+\end{align}
+$\square$
+\end{proof}
+
+
+% \begin{definition}[Component IID Statistical Causal Decision Problem]
+% A component IID statistical causal decision problemis a tuple $\langle (\Omega,\mathcal{F},\mu), X, D, N, \mathscr{T},\tau, L\rangle$. $(\Omega,\mathcal{F},\mu)$ is a probability space, $(X,\mathcal{X})$ and $(D,\mathcal{D})$ are measurable spaces. $\RV{X}:\Omega\to \Omega$ is an IID sequence of random variables $(\RV{X}_i:\Omega \to X|i\in \mathbb{N})$. $N\in\mathbb{N}$ is the number of observed samples.  $\mathscr{T}$ is a Markovian, component IID causal prospect without side information, $\tau$ is the correct causal theory and $L$ is a loss $L:\Delta(\mathcal{X})\to [0,\infty)$.
+
+% Because $\RV{X}_N$ is an IID sequence, we overload notation to say that $P_\mu(\RV{X}_i)=P_\mu(\RV{X})$
+% \end{definition}
+
+
+\begin{definition}[Range restriction]
+Given a decision set $D$, a measurable space $(\Omega,\mathcal{F})$ and a set of kernels $\mathcal{P}\subset\Delta(\mathcal{F})$, a causal prospect $\mathscr{T}$ with a range restriction to $\mathcal{P}$ is a prospect for which for each $\mu\in \Delta(\mathcal{F})$ and $d\in D$,  $\mathscr{T}(\mu)\neq\emptyset \implies \mathscr{T}(\mu)(\cdot|d)\in \mathcal{P}$.
+\end{definition}
+
+\begin{definition}[Kernel restriction]
+Given a decision set $D$, a measurable space $(\Omega,\mathcal{F})$ and a set of kernels $\mathbf{K}\subset \Delta(\mathcal{F})^D$, a causal prospect $\mathscr{T}$ with a kernel restriction to $\mathbf{K}$ is a prospect for which for each $\mu\in \Delta(\mathcal{F})$,  $\mathscr{T}(\mu)\subset \mathbf{K}\cup\emptyset$.
+
+The empty set indicates that the prospect is not valid on the distribution $\mu$.
+
+A hard intervention is a special case of kernel restriction. Given a random variable $\RV{X}:\Omega\to X$ and $\mathcal{Q}_x:= \{Q\in\Delta(\mathcal{F})|Q(\RV{X}\in B)= \llbracket x\in B\rrbracket\}$ and some bijection $f:X\to D$, define the intervention kernels $\mathbf{K}_{I}=\{K|\forall x:K(x)\in \mathcal{Q}_x\}$. Then a prospect with hard interventions $\mathscr{T}_{I}$ is kernel restricted to $\mathbf{K}_{I}$. Hard interventions are more general than do-interventions, which have additional semantics in terms of a Causal Bayesian Network.
+\end{definition}
+
+It is not necessary to assume that there is a trivial decision available. Consider the case of \emph{performance bias} in a randomised controlled trial. Performance bias occurs when different standards of care are applied to the treatment and control group\cite{collaboration_cochrane_nodate}. Performance bias may be benign if these different standards of care were maintained in every context, but it is particularly concerning if they occur only in the experimental context. 
+
+% \begin{definition}[Partial invariance]
+% Given a decision set $D$, a measurable space $(\Omega,\mathcal{F})$ and a partition $\mathscr{R}$ of $\Delta(\mathcal{F})$, define for each $\mathcal{R}\in \mathscr{R}$ the set of kernels $\mathbf{K}_\mathcal{R}:\{K|\forall d\in D:K(d)\in\mathcal{R}\}$.
+
+% A causal prospect $\mathscr{T}$ is partially invariant with respect to $\mathscr{R}$ iff $\mu\in \mathcal{R}\implies \mathscr{T}(\mu)\in \mathbf{K}_\mathcal{R}\cup \emptyset$ for all $\mathcal{R}\in\mathscr{R}$.
+
+% The prospect of helplessness is partial invariance with respect to the partition $\mathcal{R}_{\mathrm{atom}} = \{\{\mu\}|\mu\in \Delta(\mathcal{F})\}$.
+% \end{definition}
+
+
+
+% \begin{definition}[Mechanism invariance]
+% Mechanism invariance is a special case of partial invariance. Given a decision set $D$, a measurable space $(\Omega,\mathcal{F})$ and a collection of random variables $\RV{W} = \{\RV{W}_i:\Omega\to W_i|i\in [0,..,N]\}$, a causal prospect $\mathscr{T}_m$ is mechanism invariant with respect to $m=(\RV{W}_i,\RV{V})$ if it is partially invariant with respect to the partition $\mathscr{R}_m$ defined by the relation $\mu \sim_m \nu \Leftrightarrow P_\mu(\RV{W}_i|\RV{V})=P_\nu(\RV{W}_i|\RV{V})$ for $\mu,\nu\in \Delta(\mathcal{F})$.
+% \end{definition}
+
+% \begin{definition}[Sub-mechanism invariance]
+% Assume a measurable space $(\Omega,\mathcal{F})$, a causal prospect $\mathscr{T}$ and a decision set $D$. For some Markov kernel $K$ and some $E\subset D$, define the restriciton  $K|_E : E\to \Delta(\mathcal{F})$ by $K|_E(x)=K(x)$ for $x\in E$. Let $\emptyset|_E=\emptyset$. Denote by $\mathscr{T}|_E$ the restriction of $\mathscr{T}$ to $E$ defined by $\mathscr{T}|_E(\mu) = \mathscr{T}(\mu)|_E$ for all $\mu\in \Delta(\mathcal{F})$.
+
+% The prospect $\mathscr{T}$ is sub-mechanism invariant relative to $E$ and some set of mechanisms $M$ if $\mathscr{T}|_E$ is mechanism invariant relative to $M$.
+% \end{definition}

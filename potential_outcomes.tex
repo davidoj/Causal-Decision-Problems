@@ -1,0 +1,154 @@
+% \begin{example}[Potential outcomes]
+
+% I claim that given the distribution $P^{\delta\tau}_\mu$ defined above, the ``consequence'' random variable $\RV{X}^c$ can under some conditions be considered a potential outcome. This is a claim largely because I have been unable to find a precise definition of a potential outcome \cite{rubin_causal_2005,angrist_mastering_2014,hernan_causal_2018}.
+
+% In particular, given a statistical causal decision problem $\langle (\Omega,\mathcal{F},\mu), D, \mathscr{T}_\nu,\tau, L\rangle$ where $\Omega=A\times Y$, define $\RV{A}:\Omega\to A$ by $\RV{A}:(a,y)\mapsto a$ and $\RV{Y}:\Omega\to Y$ where $\RV{Y}:(a,y)\mapsto y$.
+
+% The causal prospect $\mathscr{T}_\nu$ is the collection of all a priori theories $\tau_\nu$ where for $B\in \mathcal{A}$, $\nu:d\mapsto \llbracket d\in B \rrbracket$. That is, $\mathscr{T}_\nu$ is the collection of all causal theories for which a decision $d\in D$ is understood to set the value of $\RV{A}$ to $d$ deterministically. Suppose furthermore that $\tau\in \mathscr{T}_\nu$.
+
+
+
+% Then, I claim that there is a reasonable correspondence between the potential outcome $\RV{Y}^{A=a}$ and the distribution $P^{\delta\tau}_\mu(\RV{Y}^c|\RV{A}^c=a)$, where $\RV{Y}^c$ and $\RV{A}^c$ are defined analogously to $\RV{X}^c$.
+
+% We will use the following definition of a consistent potential outcome:
+
+% \begin{definition}[Consistency]
+% Given a discrete probability space $(\Omega, \mathcal{F},\mu)$, measurable spaces $(A,\mathcal{A})$, $(Y,\mathcal{Y})$ and random variables $\RV{A}:\Omega\to A$ and $\RV{Y}:\Omega\to Y$, a $(Y,A,x)$-consistent-potential outcome is a random variable $\RV{Y}^{A=x}:\Omega\to Y$ such that, for any $\omega_a\in \RV{A}^{-1}(x)$, $\RV{Y}(\omega_a)=\RV{Y}^{A=x}(\omega_a)$.
+% \end{definition}
+
+
+% \end{example}
+% We will define the causal theory $\mathscr{T}_{\text{PO}}$ for potential outcomes without additional assumptions. Suppose $D$ is a binary set and $X=T\times Y$ is a measurable set. We identify $T=\{0,1\}$ with treatments and $Y=\{0,1\}$ with outcomes. On the data generating probability space $(\Omega,\mathcal{F},\mu)$ we have random variables $\RV{T},\RV{Y},\RV{Y_1},\RV{Y_2}$ and, for $i\in\{0,1\}$,
+% \begin{align}
+%     P_Y(\RV{Y}_i|\RV{T}=i)=P_Y(\RV{Y}|\RV{T=i}) \label{eq:po_standard}
+% \end{align}
+
+% From this, we can construct a causal theory. The obvious construction identifies
+% \begin{align}
+%     P_{YT}^d(\RV{Y},\RV{T})&=\delta_T(d)P_Y(\RV{Y}_d) \label{eq:po_treat}\\
+% \end{align}
+
+% for all $d\in D$, $P_{YT}^d\in (\RV{Y}\times\RV{T})_*[\mathscr{T}_{\text{PO}}(P_{YT})(d)]$.
+
+% Eq. \ref{eq:po_standard} imposes some restrictions on the marginals $P_Y(\RV{Y}_i)$. For example, $P_Y(\RV{Y}_i)\geq P_Y(\RV{Y}|\RV{T=i})P_T(\RV{T}=i)$. Even without the assumption of ignorability, potential outcomes is a stronger theory than skepticism.
+
+% The assumption of ignorability is
+% \begin{align}
+%     \RV{Y}_0,\RV{Y}_1 \CI \RV{T} 
+% \end{align}
+
+% Defining the theory of potential outcomes with ignorability $\mathscr{T}_{\text{POI}}$, we have
+% \begin{align}
+%     P_Y(\RV{Y}_i)&=P_Y(\RV{Y}|\RV{T}=i)\\
+%     P^d_{YT}(\RV{Y},\RV{T})&= \delta_T{d} P_Y(\RV{Y}|\RV{T}=i) \label{eq:po_ignor}
+% \end{align}
+
+% for all $d\in D$, $P_{YT}^d\in (\RV{Y}\times\RV{T})_*[\mathscr{T}_{\text{POI}}(P_{YT})(d)]$.
+% \end{example}
+
+% \begin{example}[Causal graphical models]
+% In the following, suppose $Y,A=\{0,1\}$. Define $\mathscr{T}_{\mathcal{G}}$ via the graph $\mathcal{G}$:
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 2cm ,on grid ,
+% semithick ,
+% variable/.style ={ circle ,top color =white , 
+% draw , text=blue , minimum width =1 cm},
+% kernel/.style={rectangle,draw}
+% ]
+% \node (T) {$T$};
+% \node (Y) [right = of T] {$Y$};
+% \draw (T) -- (Y);
+
+% \end{tikzpicture}
+% \end{center}
+
+% Note that this graph implies
+% \begin{align}
+%     P_Y(\RV{Y}|do(T=i))=P_Y(\RV{Y}|T=i)
+% \end{align}
+
+% For each $d\in D=\{0,1\}$, we define $\mathscr{T}_{\mathcal{G}}$ via the following equation 
+% \begin{align}
+%     P^d_{YT}(\RV{Y},\RV{T}) &= \delta_A(d)P_Y(\RV{Y}|do(T=d))\\
+%                             &= \delta_A(d)P_Y(\RV{Y}|T=i)\label{eq:graph_ident}
+% \end{align}
+% for all $d\in D$, $P^d_{YT}\in \mathscr{T}_{\mathcal{G}}(P_{YT})(d)$.
+
+% Thus by Eq. \ref{eq:graph_ident} and \ref{eq:po_ignor}, $\mathscr{T}_{\text{POI}}(P_{XT}) = \mathscr{T}_{\mathcal{G}}(P_{XT})$.
+
+% There is a subtle difference between the causal theory $\mathscr{T}_{\mathcal{G}}$ and causal graphical models: the former is defined only in terms of the graph and the $do$-operation, while the latter is defined in terms of the graph, the $do$ operation and the probability distribution $P_{TY}(\RV{T,Y})$.
+
+% Consider the theory $\mathscr{T}_{\mathcal{G}'}$ defined via the more complex graph $\mathcal{G}'$ with $T,Y,U=\{0,1\}$:
+% \begin{center}
+% \begin{tikzpicture}[-latex ,auto ,node distance =1 cm and 2cm ,on grid ,
+% semithick ,
+% variable/.style ={ circle ,top color =white , 
+% draw , text=blue , minimum width =1 cm},
+% kernel/.style={rectangle,draw}
+% ]
+% \node (T) {$T$};
+% \node (U) [above right = of T] {$U$};
+% \node (Y) [below right = of U] {$Y$};
+% \draw (T) -- (Y);
+% \draw (U) -- (T);
+% \draw (U) -- (Y);
+% \end{tikzpicture}
+% \end{center}
+
+% In this case
+% \begin{align}
+%     P_{Y}(\RV{Y}|do(\RV{T}=i)) = \sum_{u\in U} P_Y(\RV{Y}|\RV{T}=i,\RV{U}=u) P(\RV{U}=u) \label{eq:cg_fullob}
+% \end{align}
+
+% Define the quantity
+% \begin{align}
+%     P_Y(\RV{Y}|do(\RV{T}=i),\RV{T}=i) = \sum_{u\in U}  P_Y(\RV{Y}|\RV{T}=i,\RV{U}=u) P(\RV{U}=u|\RV{T}=i)
+% \end{align}
+
+% Then we have
+% \begin{align}
+%     P_Y(\RV{Y}|do(\RV{T}=i,\RV{T}=i)) = P_Y(\RV{Y}|\RV{T}=i) \label{eq:cg_unob}
+% \end{align}
+
+% Eq. \ref{eq:cg_unob} is analogous to Eq. \ref{eq:po_standard} - thus $\mathscr{T}_{\text{PO}}(P_{YT})=\mathscr{T}_{\mathcal{G}'}(P_{YT})$. However, by \ref{eq:cg_fullob} we have in general $\mathscr{T}_{\text{PO}}(P_{YTU})=\mathscr{T}_{\text{PO}}(P_{YT})\trianglerighteq \mathscr{T}_{\mathcal{G}'}(P_{YTU})$.
+% \end{example}
+
+% \subsection{Constructing a causal theory from Markov kernels}
+
+% The two examples above lean on conventions of causal graphical models and potential outcomes to get the idea across quickly. Here we will show how to construct causal theories from Markov kernels (sometimes also called \emph{stochastic maps}). This approach shares much in common with structural causal models and causal graphical models.
+
+
+% \begin{definition}[Markov kernel]
+% Given two measureable sets $(E,\mathcal{E})$ and $(F,\mathcal{F})$, a Markov kernel $K$ is a map $E\times \mathcal{F} \to [0,1]$ where
+% \begin{itemize}
+%     \item The map $x\mapsto K(B|x)$ is $\mathcal{E}$-measurable for every $B\in\mathcal{F}$
+%     \item The map $B\mapsto K(B|x)$ is a probability measure on $(F,\mathcal{F})$ for every $x\in E$ 
+% \end{itemize}
+
+% We will often write $K:E\to \Delta(\mathcal{F})$, to be read as ``$K$ maps from $E$ to probability measures on $(F,\mathcal{F})$''.
+
+% \end{definition}
+
+% \begin{definition}[Measure-kernel-function product]\label{def:kernel_products}
+% If $K$ is a Markov kernel from $(E,\mathcal{E})$ to $(F,\mathcal{F})$ and $\mu$ is a probability measure on $(E,\mathcal{E})$, then
+% \begin{align}
+%     \mu K(B)=\int_E \mu(dx) K(B|x),\qquad B\in\mathcal{F}
+% \end{align}
+% defines a probability measure $\mu K$ on $(F,\mathcal{F})$.
+
+% If $f$ is a nonnegative measurable function $F\to \mathbb{R}$ then
+% \begin{align}
+%     Kf(x) = \int_F K(dy|x)f(y), \qquad x\in E
+% \end{align}
+% is a nonnegative measureable function $E\to \mathbb{R}$.
+
+% If $L$ is a Markov kernel from $(F,\mathcal{F})$ to $(G,\mathcal{G})$, then
+% \begin{align}
+%     KL(B|x) = \int_F K(dy|x) L(B|y),\qquad x\in E, B\in \mathcal{G}
+% \end{align}
+% is a Markov kernel from $(E,\mathcal{E})$ to $(G,\mathcal{G})$. \cite{cinlar_probability_2011}
+% \end{definition}
+
+% Given a Markov kernel $K:X\to \Delta(Y)$ and a random variable $\epsilon \sim U([0,1])$ it is possible to construct a function $f:X\times[0,1]\to F$ that induces a conditional distribution matching $K$. That is, defining $\RV{Y}'=f(\RV{X},\epsilon)$, $P_{Y}(\RV{Y}'|\RV{X}=x)=K(\RV{Y}|x)$ for all $x\in X$.
+
+% We provide the construction explicitly: define the cumulative distribution function $F_Y^x(y)=K(\RV{Y}\leq y|x)$ with inverse $(F^x_Y)^{-1}$. Define $f=(F^x_Y)^{-1}(\epsilon)$. Then $\RV{F}'=f(x,\epsilon)$ has the desired distribution for all $x\in X$ \cite{devroye_non-uniform_1986}.
